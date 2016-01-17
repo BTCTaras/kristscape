@@ -1,0 +1,53 @@
+local t = {}
+local tabs = 10
+local activetab = 3
+local w, h = term.getSize()
+local xy, tc, bg = term.setCursorPos, term.setTextColor, term.setBackgroundColor
+bg(colors.white)
+term.clear()
+for i=1,10 do
+	t[i] = {}
+	t[i]["title"] = "New Tab"
+	t[i]["momentum"] = 1048575
+end
+local function drawtabs()
+	local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
+	xy(2,1)
+	bg(colors.black)
+	term.clearLine()
+	for i = 1, tabs do
+		xy((tw+1)*(i-1)+2,1)
+		if i == activetab then
+			bg(colors.lightGray)
+			tc(colors.gray)
+		else
+			bg(colors.gray)
+			tc(colors.lightGray)
+		end
+		term.write(" "..string.rep(" ",tw-3))
+		tc(colors.red)
+		term.write(" \215")
+	end
+	if tabs < 10 then
+		xy(2+(tw+1)*tabs,1)
+		bg(colors.gray)
+		tc(colors.lightGray)
+		term.write(" + ")
+	end
+end
+local function drawhud()
+	xy(3,2)
+	bg(colors.lightGray)
+	term.clearLine()
+	bg(colors.white)
+	term.write(string.rep(" ",w-4))
+	bg(colors.lightGray)
+	tc(colors.white)
+	term.write("  \171")
+	xy(3,3)
+	bg(colors.lightGray)
+	term.clearLine()
+end
+drawtabs()
+drawhud()
+print()
