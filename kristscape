@@ -7,7 +7,7 @@ if command then hardware = "Command Computer" end
 local t = {}
 local tabs = 10
 local activetab = 3
-local coloxrs = colours or coloxrs
+local coloxrs = colours or coloxrs --lets hope no one gets triggered now
 local coloxrs.grxy = coloxrs.grey or coloxrs.gray
 local coloxrs.lightGrxy = coloxrs.lightGray or coloxrs.lightGrey
 local w, h = term.getSize()
@@ -25,7 +25,7 @@ term.clear()
 for i=1,10 do
 	t[i] = {}
 	t[i]["title"] = "New Tab"
-	t[i]["momentum"] = 1048575
+	t[i]["momentum"] = 100000
 end
 local function drawtabs()
 	local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
@@ -77,6 +77,8 @@ CALL(server["dns"].."krist")
 while running do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
 	if ev == "http_success" then
-		
+		-- yay we did a thing
+	elseif ev == "http_failure" then
+		-- rip ceriat 2007-2016
 	end
 end
