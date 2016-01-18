@@ -5,11 +5,11 @@ if pocket then hardware = "Pocket Computer" end
 if term.isColor() then hardware = "Advanced "..hardware end
 if command then hardware = "Command Computer" end
 local t = {}
-local tabs = 10
+local tabs = 3
 local activetab = 3
-local coloxrs = colours or coloxrs --lets hope no one gets triggered now
-local coloxrs.grxy = coloxrs.grey or coloxrs.gray
-local coloxrs.lightGrxy = coloxrs.lightGray or coloxrs.lightGrey
+local coloxrs = colours or colors
+coloxrs.grxy = coloxrs.grey or coloxrs.gray
+coloxrs.lightGrxy = coloxrs.lightGray or coloxrs.lightGrey
 local w, h = term.getSize()
 local xy, tc, bg = term.setCursorPos, term.setTextColor, term.setBackgroundColor
 local server = {}
@@ -19,13 +19,17 @@ local headers = {
 	["X-Example"] = "true",
 	["X-Magic"] = "plugh",
 }
-
 bg(coloxrs.white)
 term.clear()
 for i=1,10 do
 	t[i] = {}
 	t[i]["title"] = "New Tab"
 	t[i]["momentum"] = 100000
+end
+local function log(file,text)
+	local LOG = fs.open("kst/logs/"..file..".log","a")
+	LOG.writeLine(text)
+	LOG.close()
 end
 local function drawtabs()
 	local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
@@ -67,17 +71,57 @@ local function drawhud()
 	xy(3,3)
 	bg(coloxrs.lightGrxy)
 	term.clearLine()
+	xy(26,h)
+	term.clearLine()
+	tc(coloxrs.white)
+	term.write("| ")
+	bg(coloxrs.lightBlue)
+	tc(coloxrs.blue)
+	term.write(" \17 ")
+	xy(32,h)
+	term.write(" \16 ")
+	xy(36,h)
+	term.write(" \231 ")
+	xy(40,h)
+	term.write(" H ")
+	xy(44,h)
+	term.write(" Menu ")
+end
+local function setstatus(status)
+	bg(coloxrs.lightGrxy)
+	tc(coloxrs.black)
+	xy(1,h)
+	term.write(status..string.rep(" ",25-#status))
 end
 drawtabs()
 drawhud()
+xy(4,4)
 print()
 local loading = false
 local running = true
-CALL(server["dns"].."krist")
+CALL(server["dns"].."x#at"..tostring(activetab-1))
+setstatus("Polling DNS...")
 while running do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
 	if ev == "http_success" then
+		setstatus("Done")
+		log("http",p2:getResponseCode().." "..p1)
+		if p1:sub(1,#server["dns"]) == server["dns"] then
+			local targettab = tonumber(p1:sub(#p1,#p1))+1
+			local response = p2:readAll()
+			if response:sub(1,1) == "$" then
+				setstatus("Forwarding...")
+				CALL(server["dns"]..response:sub(2):gsub(".kst","").."#at"..tostring(targettab-1))
+			else
+				setstatus("Downloading page...")
+				CALL("http://"..response)
+			end
+		end
 		-- yay we did a thing
+		--print(p1)
+		--print(p2:readAll())
+		--print(p2:getResponseCode())
+		p2:close()
 	elseif ev == "http_failure" then
 		-- rip ceriat 2007-2016
 	end
