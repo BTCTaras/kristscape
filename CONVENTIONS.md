@@ -1,0 +1,21 @@
+# Project Code Conventions
+- Newlines are to be used to separate logical sections of the code.
+- Globals are not to be used for convenience. Always define local variables.
+- Prefer dot notation over the `[]` index operator where possible.
+- In the case of OOP, objects shall employ colon notation.
+- In the case of OOP, the metatable method shall be preferred for defining classes.
+- Frequently accessed tables shall be numerically indexed if possible.
+- Temporary variables outside of any function shall have their scope limited with a `do end` block where applicable.
+- Prefer `local x = nil` over `local x` when initialising a variable to nil.
+- Variables shall be named in lowercase camelCase.
+- Functions shall prefer the `function f()` syntax over `f = function()`.
+- Functions shall be made local if possible.
+- Employ tail calls even if infinite recursion is not a necessity.
+- String operations shall prefer colon notation (`("hello"):sub(2, 3)`) over indexing the string table (`string.sub("hello", 2, 3)`).
+- Arguments and parameters must be listed as such: `(2, 3, 4)`.
+- Tables containing key-value pairs shall be separated with a semicolon, whereas tables containing single values shall be separated with a comma.
+- Lines must not be ended with a semicolon unless there are multiple statements on a single line, as such: `local x = 2; x = x + 4`.
+- Contracting statements into a single line should be avoided.
+- Great amounts of chained if statements should be replaced by a lookup table.
+- If a function/variable inside the global table is used often, save it in a local variable.
+

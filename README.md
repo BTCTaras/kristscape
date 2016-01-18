@@ -1,2 +1,2 @@
 # kristscape
-The ComputerCraft web browser that works across servers
+The ComputerCraft web browser that works across servers.
