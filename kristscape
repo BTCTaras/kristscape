@@ -1,8 +1,22 @@
+local version = "0.5.0"
+local hardware = "Computer"
+if turtle then hardware = "Turtle" end
+if pocket then hardware = "Pocket Computer" end
+if term.isColor() then hardware = "Advanced "..hardware end
+if command then hardware = "Command Computer" end
 local t = {}
 local tabs = 10
 local activetab = 3
 local w, h = term.getSize()
 local xy, tc, bg = term.setCursorPos, term.setTextColor, term.setBackgroundColor
+local server = {}
+server["dns"] = "http://krist.ceriat.net/?a="
+local headers = {
+	["User-Agent"] = "KristScape/"..version.." ("..hardware.."; "..os.version().."; #"..os.getComputerID().."; en-us)",
+	["X-Example"] = "true",
+	["X-Magic"] = "plugh",
+}
+
 bg(colors.white)
 term.clear()
 for i=1,10 do
@@ -35,6 +49,9 @@ local function drawtabs()
 		term.write(" + ")
 	end
 end
+local function CALL(server)
+	http.request(server,nil,headers)
+end
 local function drawhud()
 	xy(3,2)
 	bg(colors.lightGray)
@@ -51,3 +68,12 @@ end
 drawtabs()
 drawhud()
 print()
+local loading = false
+local running = true
+CALL(server["dns"].."krist")
+while running do
+	local ev, p1, p2, p3, p4 = os.pullEvent()
+	if ev == "http_success" then
+		
+	end
+end
