@@ -7,6 +7,9 @@ if command then hardware = "Command Computer" end
 local t = {}
 local tabs = 10
 local activetab = 3
+local coloxrs = colours or coloxrs --lets hope no one gets triggered now
+local coloxrs.grxy = coloxrs.grey or coloxrs.gray
+local coloxrs.lightGrxy = coloxrs.lightGray or coloxrs.lightGrey
 local w, h = term.getSize()
 local xy, tc, bg = term.setCursorPos, term.setTextColor, term.setBackgroundColor
 local server = {}
@@ -17,35 +20,35 @@ local headers = {
 	["X-Magic"] = "plugh",
 }
 
-bg(colors.white)
+bg(coloxrs.white)
 term.clear()
 for i=1,10 do
 	t[i] = {}
 	t[i]["title"] = "New Tab"
-	t[i]["momentum"] = 1048575
+	t[i]["momentum"] = 100000
 end
 local function drawtabs()
 	local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
 	xy(2,1)
-	bg(colors.black)
+	bg(coloxrs.black)
 	term.clearLine()
 	for i = 1, tabs do
 		xy((tw+1)*(i-1)+2,1)
 		if i == activetab then
-			bg(colors.lightGray)
-			tc(colors.gray)
+			bg(coloxrs.lightGrxy)
+			tc(coloxrs.grxy)
 		else
-			bg(colors.gray)
-			tc(colors.lightGray)
+			bg(coloxrs.grxy)
+			tc(coloxrs.lightGrxy)
 		end
 		term.write(" "..string.rep(" ",tw-3))
-		tc(colors.red)
+		tc(coloxrs.red)
 		term.write(" \215")
 	end
 	if tabs < 10 then
 		xy(2+(tw+1)*tabs,1)
-		bg(colors.gray)
-		tc(colors.lightGray)
+		bg(coloxrs.grxy)
+		tc(coloxrs.lightGrxy)
 		term.write(" + ")
 	end
 end
@@ -54,15 +57,15 @@ local function CALL(server)
 end
 local function drawhud()
 	xy(3,2)
-	bg(colors.lightGray)
+	bg(coloxrs.lightGrxy)
 	term.clearLine()
-	bg(colors.white)
+	bg(coloxrs.white)
 	term.write(string.rep(" ",w-4))
-	bg(colors.lightGray)
-	tc(colors.white)
+	bg(coloxrs.lightGrxy)
+	tc(coloxrs.white)
 	term.write("  \171")
 	xy(3,3)
-	bg(colors.lightGray)
+	bg(coloxrs.lightGrxy)
 	term.clearLine()
 end
 drawtabs()
@@ -74,6 +77,8 @@ CALL(server["dns"].."krist")
 while running do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
 	if ev == "http_success" then
-		
+		-- yay we did a thing
+	elseif ev == "http_failure" then
+		-- rip ceriat 2007-2016
 	end
 end
