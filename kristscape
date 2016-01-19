@@ -7,8 +7,9 @@ if term.isColor() then hardware = "Advanced "..hardware end
 if command then hardware = "Command Computer" end
 
 local t = {}
-local tabs = 10
-local activetab = 3
+local tabs = 0
+local activetab = 1
+local baredit = ""
 
 local coloxrs = colours or colors
 coloxrs.grxy = coloxrs.grey or coloxrs.gray
@@ -25,23 +26,6 @@ local headers = {
 	["X-Magic"] = "plugh",
 }
 
-bg(coloxrs.white)
-term.clear()
-
-for i=1,10 do
-	t[i] = {}
-	t[i]["title"] = "New Tab"
-	t[i]["momentum"] = 100000
-end
-
-local function log(file,text)
-	--[[
-	local LOG = fs.open("kst/logs/"..file..".log","a")
-	LOG.writeLine(text)
-	LOG.close()
-	--]]
-end
-
 local function drawtabs()
 	local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
 	xy(2,1)
@@ -56,7 +40,8 @@ local function drawtabs()
 			bg(coloxrs.grxy)
 			tc(coloxrs.lightGrxy)
 		end
-		term.write(" "..string.rep(" ",tw-3))
+		local tt = t[i]["title"]:sub(1,tw-3)
+		term.write(" "..tt..string.rep(" ",tw-3-#tt))
 		tc(coloxrs.red)
 		term.write(" \215")
 	end
@@ -66,6 +51,93 @@ local function drawtabs()
 		tc(coloxrs.lightGrxy)
 		term.write(" + ")
 	end
+end
+local function setstatus(status)
+	bg(coloxrs.lightGrxy)
+	tc(coloxrs.black)
+	xy(1,h)
+	term.write(tostring(status)..string.rep(" ",25-#tostring(status)))
+end
+local function seturl(url,v)
+	bg(coloxrs.white)
+	tc(coloxrs.black)
+	xy(3,2)
+	if v == nil or v == true or v == false then
+		term.write(url)
+	elseif v == "#SEL" then
+		bg(coloxrs.cyan)
+		tc(coloxrs.white)
+		term.write(url:sub(-w-5))
+	else
+		
+	end
+	bg(coloxrs.white)
+	if #url < w - 4 then
+		term.write(string.rep(" ",w-4-#url))
+	end
+	if v == true and url:find(".kst") then
+		tc(coloxrs.green)
+		xy(10,2)
+		term.write(url:sub(8,url:find(".kst")+3))
+	end
+end
+
+bg(coloxrs.white)
+term.clear()
+
+local function log(file,text)
+	--[[
+	local LOG = fs.open("kst/logs/"..file..".log","a")
+	LOG.writeLine(text)
+	LOG.close()
+	--]]
+end
+
+local tab = {}
+tab["open"] = function(url)
+	tabs = tabs + 1
+	tab.reset(tabs)
+	tab.switch(tabs)
+	if url then
+		t[tabs]["url"] = url
+		seturl(url)
+	end
+	drawtabs()
+end
+tab["reset"] = function(i)
+	t[i] = {}
+	t[i]["title"] = "New Tab"
+	t[i]["url"] = ""
+	t[i]["certified"] = false
+	t[i]["momentum"] = 100000
+end
+tab["switch"] = function(n)
+	activetab = n
+	seturl(t[n]["url"],t[n]["certified"])
+	drawtabs()
+end
+tab["load"] = function(n)
+	
+end
+tab["close"] = function(n)
+	for i=n+1,tabs do
+		t[i-1] = t[i]
+	end
+	tabs = tabs - 1
+	if tabs == 0 then
+		running = false
+	else
+		if activetab == n then
+			tab.switch(math.min(n,tabs))
+		elseif activetab > n then
+			tab.switch(activetab - 1)
+		end
+	end
+	drawtabs()
+end
+
+for i=1,10 do
+	tab.reset(i)
 end
 
 local function CALL(server)
@@ -97,15 +169,8 @@ local function drawhud()
 	term.write(" R ")
 	xy(40,h)
 	term.write(" H ")
-	xy(45,h)
+	xy(44,h)
 	term.write(" Menu ")
-end
-
-local function setstatus(status)
-	bg(coloxrs.lightGrxy)
-	tc(coloxrs.black)
-	xy(1,h)
-	term.write(tostring(status)..string.rep(" ",25-#tostring(status)))
 end
 
 drawtabs()
@@ -116,8 +181,8 @@ local loading = false
 local running = true
 CALL(server["dns"].."x#at"..tostring(activetab-1))
 setstatus("Polling DNS...")
-
-while running do
+tab.open("http://kst.kst/")
+while tabs > 0 do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
 	if ev == "http_success" then
 		setstatus("Done")
@@ -140,24 +205,43 @@ while running do
 	elseif ev == "http_failure" then
 		-- rip ceriat 2007-2016
 	elseif ev == "mouse_click" then
+		baredit = ""
+		seturl(t[activetab]["url"],t[activetab]["certified"])
+		term.setCursorBlink(false)
 		if p3 == 1 then -- Tabs
 			local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
 			p2 = p2 - 1
 			--if tw + 1 % p2 ~= 0 or math.ceil(p2/(tw+1)) ~= p2/(tw+1) then
-			if math.ceil(p2/(tw+1)) ~= p2/(tw+1) then 
-				if tw == p2%(tw+1) then
-					--close the tab
+			if math.ceil(p2/(tw+1)) ~= p2/(tw+1) then
+				if tabs < 10 and math.ceil(p2/(tw+1)) == tabs + 1 and p2%(tw+1) <= 3 then
+					tab.open()
 				else
-					activetab = math.ceil(p2/(tw+1))
+					if tw == p2%(tw+1) then
+						tab.close(math.ceil(p2/(tw+1)))
+					elseif math.ceil(p2/(tw+1)) <= tabs then
+						tab.switch(math.ceil(p2/(tw+1)))
+					end
 				end
-				drawtabs()
 			end
-		elseif p3 == 2 then -- Address bar
-			
+		elseif p3 == 2 and p2 > 2 and p2 < w - 2 then -- Address bar
+			if baredit == "" then
+				baredit = "#SEL"
+				term.setCursorBlink(true)
+				seturl(t[activetab]["url"],baredit)
+			end
 		elseif p3 == h then -- Status bar
-		
+			
 		elseif p2 == w then -- Scroll bar
-		
+			
 		end
 	end
+	if #baredit > 0 then
+		local bl = #baredit
+		if baredit == "#SEL" then bl = t[activetab]["url"]:len() end
+		xy(3+math.min(bl,w-7),2)
+		os.sleep()
+	end
 end
+bg(coloxrs.black)
+term.clear()
+xy(1,1)
