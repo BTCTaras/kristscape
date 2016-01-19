@@ -1,5 +1,9 @@
 local version = "0.5.0"
 
+local function CALL(server)
+	http.request(server,nil,headers)
+end
+
 local hardware = "Computer"
 if turtle then hardware = "Turtle" end
 if pocket then hardware = "Pocket Computer" end
@@ -20,6 +24,7 @@ local xy, tc, bg = term.setCursorPos, term.setTextColor, term.setBackgroundColor
 
 local server = {}
 server["dns"] = "http://krist.ceriat.net/?a="
+
 local headers = {
 	["User-Agent"] = "KristScape/"..version.." ("..hardware.."; "..os.version().."; #"..os.getComputerID().."; en-us)",
 	["X-Example"] = "true",
@@ -62,19 +67,22 @@ local function seturl(url,v)
 	bg(coloxrs.white)
 	tc(coloxrs.black)
 	xy(3,2)
+	term.write(string.rep(" ",w-4))
+	xy(3,2)
 	if v == nil or v == true or v == false then
 		term.write(url)
 	elseif v == "#SEL" then
 		bg(coloxrs.cyan)
 		tc(coloxrs.white)
-		term.write(url:sub(-w-5))
+		term.write(url:sub(-w+5))
+		bg(coloxrs.white)
+		tc(coloxrs.red)
+		term.write("_")
 	else
-		
+		tc(coloxrs.red)
+		term.write(v:sub(-w+5).."_")
 	end
 	bg(coloxrs.white)
-	if #url < w - 4 then
-		term.write(string.rep(" ",w-4-#url))
-	end
 	if v == true and url:find(".kst") then
 		tc(coloxrs.green)
 		xy(10,2)
@@ -86,11 +94,30 @@ bg(coloxrs.white)
 term.clear()
 
 local function log(file,text)
-	--[[
+	--[ [
 	local LOG = fs.open("kst/logs/"..file..".log","a")
 	LOG.writeLine(text)
 	LOG.close()
 	--]]
+end
+
+local function fixurl(url,thing)
+	local name
+	if url:sub(1,7) ~= "http://" then url = "http://" .. url end
+	if url:sub(1,7) == "http://" then
+		if not url:sub(8):find(".kst") then
+			url = url:gsub(".dia",".kst",1)
+			url = url:gsub(".tar",".kst",1)
+			url = url:gsub(".qst",".kst",1)
+			url = url:gsub(".lra",".kst",1)
+		end
+		if not url:sub(8):find("/") then
+			url = url .. "/"
+		end
+		name = url:sub(8,url:sub(8):find("/")-1)
+	end
+	if thing == "url" then return url end
+	if thing == "name" then return name:gsub(".kst","") end
 end
 
 local tab = {}
@@ -108,6 +135,7 @@ tab["reset"] = function(i)
 	t[i] = {}
 	t[i]["title"] = "New Tab"
 	t[i]["url"] = ""
+	t[i]["name"] = ""
 	t[i]["certified"] = false
 	t[i]["momentum"] = 100000
 end
@@ -116,8 +144,17 @@ tab["switch"] = function(n)
 	seturl(t[n]["url"],t[n]["certified"])
 	drawtabs()
 end
-tab["load"] = function(n)
-	
+tab["load"] = function(n,url)
+	if url then
+		t[n]["url"] = fixurl(baredit,"url")
+		t[n]["name"] = fixurl(baredit,"name")
+		t[n]["title"] = fixurl(baredit,"name")..".kst"
+		seturl(t[activetab]["url"])
+		drawtabs()
+		log("history",t[n]["url"])
+	end
+	CALL(server["dns"]..t[n]["name"].."#at"..tostring(activetab-1))
+	setstatus("Polling DNS...")
 end
 tab["close"] = function(n)
 	for i=n+1,tabs do
@@ -138,10 +175,6 @@ end
 
 for i=1,10 do
 	tab.reset(i)
-end
-
-local function CALL(server)
-	http.request(server,nil,headers)
 end
 
 local function drawhud()
@@ -166,9 +199,9 @@ local function drawhud()
 	xy(32,h)
 	term.write(" \16 ")
 	xy(36,h)
-	term.write(" R ")
+	term.write(" r ")
 	xy(40,h)
-	term.write(" H ")
+	term.write(" h ")
 	xy(44,h)
 	term.write(" Menu ")
 end
@@ -179,9 +212,7 @@ xy(4,4)
 
 local loading = false
 local running = true
-CALL(server["dns"].."x#at"..tostring(activetab-1))
-setstatus("Polling DNS...")
-tab.open("http://kst.kst/")
+tab.open("http://\223.kst/")
 while tabs > 0 do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
 	if ev == "http_success" then
@@ -193,21 +224,21 @@ while tabs > 0 do
 			if response:sub(1,1) == "$" then
 				setstatus("Forwarding...")
 				CALL(server["dns"]..response:sub(2):gsub(".kst","").."#at"..tostring(targettab-1))
-			else
+			elseif #response > 0 then
 				setstatus("Downloading page...")
 				CALL("http://"..response)
+			else
+				setstatus("No site found")
 			end
 		else
 			
 		end
-		
 		p2:close()
 	elseif ev == "http_failure" then
 		-- rip ceriat 2007-2016
 	elseif ev == "mouse_click" then
 		baredit = ""
 		seturl(t[activetab]["url"],t[activetab]["certified"])
-		term.setCursorBlink(false)
 		if p3 == 1 then -- Tabs
 			local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
 			p2 = p2 - 1
@@ -226,7 +257,6 @@ while tabs > 0 do
 		elseif p3 == 2 and p2 > 2 and p2 < w - 2 then -- Address bar
 			if baredit == "" then
 				baredit = "#SEL"
-				term.setCursorBlink(true)
 				seturl(t[activetab]["url"],baredit)
 			end
 		elseif p3 == h then -- Status bar
@@ -234,12 +264,22 @@ while tabs > 0 do
 		elseif p2 == w then -- Scroll bar
 			
 		end
-	end
-	if #baredit > 0 then
-		local bl = #baredit
-		if baredit == "#SEL" then bl = t[activetab]["url"]:len() end
-		xy(3+math.min(bl,w-7),2)
-		os.sleep()
+	elseif ev == "char" then
+		if #baredit > 0 then
+			if baredit == "#SEL" and p1 ~= "#" then
+				baredit = p1
+			else
+				baredit = baredit .. p1
+			end
+			seturl(t[activetab]["url"],baredit)
+		end
+	elseif ev == "key" then
+		if #baredit > 0 then
+			if p1 == keys.enter then
+				tab.load(activetab,baredit)
+				baredit = ""
+			end
+		end
 	end
 end
 bg(coloxrs.black)
