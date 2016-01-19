@@ -22,6 +22,10 @@ coloxrs.lightGrxy = coloxrs.lightGray or coloxrs.lightGrey
 local w, h = term.getSize()
 local xy, tc, bg = term.setCursorPos, term.setTextColor, term.setBackgroundColor
 
+local port = window.create(term.current(),1,4,w,h-4)
+port.setBackgroundColor(coloxrs.white)
+port.clear()
+
 local server = {}
 server["dns"] = "http://krist.ceriat.net/?a="
 
@@ -78,6 +82,9 @@ local function seturl(url,v)
 		bg(coloxrs.white)
 		tc(coloxrs.red)
 		term.write("_")
+	elseif v:sub(1,1) == "#" then
+		tc(coloxrs.red)
+		term.write("_")
 	else
 		tc(coloxrs.red)
 		term.write(v:sub(-w+5).."_")
@@ -89,9 +96,15 @@ local function seturl(url,v)
 		term.write(url:sub(8,url:find(".kst")+3))
 	end
 end
+local function fullrender(n)
+	port.setBackgroundColor(coloxrs.red)
+	port.clear()
+	port.setCursorPos(20,11)
+	port.write(t[n]["ksml"])
+end
 
-bg(coloxrs.white)
-term.clear()
+--bg(coloxrs.white)
+--term.clear()
 
 local function log(file,text)
 	--[ [
@@ -135,8 +148,11 @@ tab["reset"] = function(i)
 	t[i] = {}
 	t[i]["title"] = "New Tab"
 	t[i]["url"] = ""
+	t[i]["http"] = ""
 	t[i]["name"] = ""
+	t[i]["ksml"] = ""
 	t[i]["certified"] = false
+	t[i]["buffer"] = {}
 	t[i]["momentum"] = 100000
 end
 tab["switch"] = function(n)
@@ -216,7 +232,6 @@ tab.open("http://\223.kst/")
 while tabs > 0 do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
 	if ev == "http_success" then
-		setstatus("Done")
 		log("http",p2:getResponseCode().." "..p1)
 		if p1:sub(1,#server["dns"]) == server["dns"] then
 			local targettab = tonumber(p1:sub(#p1,#p1))+1
@@ -224,14 +239,24 @@ while tabs > 0 do
 			if response:sub(1,1) == "$" then
 				setstatus("Forwarding...")
 				CALL(server["dns"]..response:sub(2):gsub(".kst","").."#at"..tostring(targettab-1))
+				t[targettab]["url"] = fixurl(response:sub(2),"url")
+				t[targettab]["name"] = response:sub(2):gsub(".kst","")
+				seturl(fixurl(response:sub(2),"url"))
 			elseif #response > 0 then
 				setstatus("Downloading page...")
 				CALL("http://"..response)
+				t[targettab]["http"] = fixurl(response,"url")
 			else
 				setstatus("No site found")
 			end
 		else
-			
+			for i=1,10 do
+				if t[i]["http"] == p1 then
+					t[i]["ksml"] = p2:readAll()
+					if activetab == i then setstatus("Done") fullrender(i) setstatus(#t[i]["ksml"]) end
+					break
+				end
+			end
 		end
 		p2:close()
 	elseif ev == "http_failure" then
@@ -266,7 +291,7 @@ while tabs > 0 do
 		end
 	elseif ev == "char" then
 		if #baredit > 0 then
-			if baredit == "#SEL" and p1 ~= "#" then
+			if baredit:sub(1,1) == "#" and p1 ~= "#" then
 				baredit = p1
 			else
 				baredit = baredit .. p1
@@ -275,9 +300,22 @@ while tabs > 0 do
 		end
 	elseif ev == "key" then
 		if #baredit > 0 then
+			if baredit == "#SEL" then
+				if p1 == keys.enter then
+					baredit = t[activetab]["url"]
+				else
+					baredit = "#NUL "
+				end
+			end
+			if p1 == keys.backspace then
+				baredit = baredit:sub(1,#baredit-1)
+				if #baredit == 0 then baredit = "#NUL" end
+			end
 			if p1 == keys.enter then
 				tab.load(activetab,baredit)
 				baredit = ""
+			else
+				seturl(t[activetab]["url"],baredit)
 			end
 		end
 	end
