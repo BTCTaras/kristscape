@@ -94,6 +94,10 @@ local function parse(tag,arg,closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "BLAMETARAS" then
+		print("Blame Taras!")
+		os.sleep (2)
+		os.shutdown ()
 	elseif tag == "SHIT" then
 		go2(1,2)
 	end
