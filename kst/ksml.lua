@@ -8,42 +8,50 @@ local x, y = args[3] or 1, args[4] or 1
 
 local fg,bg = "f","0"
 
-local function makemea(thing,from)
+local colorsLookupTable = {
+	["WHITE"] = "0",
+	["ORANGE"] = "1",
+	["MAGENTA"] = "2",
+	["LIGHTBLUE"] = "3",
+	["LTBLUE"] = "3",
+	["YELLOW"] = "4",
+	["LIME"] = "5",
+	["LIGHTGREEN"] = "5",
+	["LTGREEN"] = "5",
+	["PINK"] = "6",
+	["GRAY"] = "7",
+	["GREY"] = "7",
+	["GRXY"] = "7",
+	["DARKGRAY"] = "7",
+	["DARKGREY"] = "7",
+	["DARKGRXY"] = "7",
+	["DKGRAY"] = "7",
+	["DKGREY"] = "7",
+	["DKGRXY"] = "7",
+	["LIGHTGRAY"] = "8",
+	["LIGHTGREY"] = "8",
+	["LIGHTGRXY"] = "8",
+	["LTGRAY"] = "8",
+	["LTGREY"] = "8",
+	["LTGRXY"] = "8",
+	["CYAN"] = "9",
+	["LINK"] = "9",
+	["PURPLE"] = "a",
+	["BLUE"] = "b",
+	["BROWN"] = "c",
+	["GREEN"] = "d",
+	["RED"] = "e",
+	["BLACK"] = "f",
+	["LEMMYSSOUL"] = "f",
+}
+
+local function makemea (thing, from)
 	if thing == "color" then
-		if from == "WHITE" then return "0" end
-		if from == "ORANGE" then return "1" end
-		if from == "MAGENTA" then return "2" end
-		if from == "LIGHTBLUE" then return "3" end
-		if from == "LTBLUE" then return "3" end
-		if from == "YELLOW" then return "4" end
-		if from == "LIME" then return "5" end
-		if from == "LIGHTGREEN" then return "5" end
-		if from == "LTGREEN" then return "5" end
-		if from == "PINK" then return "6" end
-		if from == "GRAY" then return "7" end
-		if from == "GREY" then return "7" end
-		if from == "GRXY" then return "7" end
-		if from == "DARKGRAY" then return "7" end
-		if from == "DARKGREY" then return "7" end
-		if from == "DARKGRXY" then return "7" end
-		if from == "DKGRAY" then return "7" end
-		if from == "DKGREY" then return "7" end
-		if from == "DKGRXY" then return "7" end
-		if from == "LIGHTGRAY" then return "8" end
-		if from == "LIGHTGREY" then return "8" end
-		if from == "LIGHTGRXY" then return "8" end
-		if from == "LTGRAY" then return "8" end
-		if from == "LTGREY" then return "8" end
-		if from == "LTGRXY" then return "8" end
-		if from == "CYAN" then return "9" end
-		if from == "LINK" then return "9" end
-		if from == "PURPLE" then return "a" end
-		if from == "BLUE" then return "b" end
-		if from == "BROWN" then return "c" end
-		if from == "GREEN" then return "d" end
-		if from == "RED" then return "e" end
-		if from == "BLACK" then return "f" end
-		if from == "LEMMMYSSOUL" then return "f" end
+		local colorKey = colorsLookupTable[from]
+		if colorKey ~= nil then
+			return colorKey
+		end
+		return "f" -- Default color
 	end
 end
 
@@ -73,7 +81,7 @@ end
 
 local function parse(tag,arg,closing)
 	if tag == "A" then
-	
+
 	elseif tag == "BR" then
 		y = y + 1
 		x = 1
