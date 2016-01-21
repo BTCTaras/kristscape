@@ -42,7 +42,7 @@ local colorsLookupTable = {
 	["GREEN"] = "d",
 	["RED"] = "e",
 	["BLACK"] = "f",
-	["LEMMYSSOUL"] = "f",
+	["LEMMMYSSOUL"] = "f",
 }
 
 local function makemea (thing, from)
