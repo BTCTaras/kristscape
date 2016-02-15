@@ -1,4 +1,5 @@
 local version = "0.5.0"
+local codeisamess = true
 
 local function CALL(server)
 	http.request(server,nil,headers)
@@ -31,7 +32,6 @@ server["dns"] = "http://krist.ceriat.net/?a="
 
 local headers = {
 	["User-Agent"] = "KristScape/"..version.." ("..hardware.."; "..os.version().."; #"..os.getComputerID().."; en-us)",
-	["X-Example"] = "true",
 	["X-Magic"] = "plugh",
 }
 
@@ -97,14 +97,22 @@ local function seturl(url,v)
 	end
 end
 local function fullrender(n)
-	port.setBackgroundColor(coloxrs.red)
+	local buffer = t[n]["buffer"]
+	buffer = {"Hello1234567890e","Worldabcdef0123"}
+	port.setBackgroundColor(coloxrs.white)
 	port.clear()
-	port.setCursorPos(20,11)
-	port.write(t[n]["ksml"])
+	for i=1,#buffer do
+		if i == 1 and #buffer[i] % 3 == 1 then
+			port.setBackgroundColor(2^tonumber(buffer[i]:sub(#buffer[i]-1),16))
+			port.clear()
+			buffer[i] = buffer[i]:sub(1,#buffer[i]-1)
+		end
+		if #buffer[i] % 3 ~= 0 then break end
+		local a,b,c = buffer[i]:sub(1,#buffer[i]/3),buffer[i]:sub(#buffer[i]/3+1,2/3*#buffer[i]),buffer[i]:sub(2/3*#buffer[i]+1)
+		port.setCursorPos(1,i)
+		port.blit(a,b,c)
+	end
 end
-
---bg(coloxrs.white)
---term.clear()
 
 local function log(file,text)
 	--[ [
@@ -228,7 +236,7 @@ xy(4,4)
 
 local loading = false
 local running = true
-tab.open("http://\223.kst/")
+tab.open("http://x.kst/")
 while tabs > 0 do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
 	if ev == "http_success" then
@@ -253,7 +261,7 @@ while tabs > 0 do
 			for i=1,10 do
 				if t[i]["http"] == p1 then
 					t[i]["ksml"] = p2:readAll()
-					if activetab == i then setstatus("Done") fullrender(i) setstatus(#t[i]["ksml"]) end
+					if activetab == i then setstatus("Done") fullrender(i) end
 					break
 				end
 			end
@@ -267,7 +275,6 @@ while tabs > 0 do
 		if p3 == 1 then -- Tabs
 			local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
 			p2 = p2 - 1
-			--if tw + 1 % p2 ~= 0 or math.ceil(p2/(tw+1)) ~= p2/(tw+1) then
 			if math.ceil(p2/(tw+1)) ~= p2/(tw+1) then
 				if tabs < 10 and math.ceil(p2/(tw+1)) == tabs + 1 and p2%(tw+1) <= 3 then
 					tab.open()
@@ -300,7 +307,9 @@ while tabs > 0 do
 		end
 	elseif ev == "key" then
 		if #baredit > 0 then
-			if baredit == "#SEL" then
+			if p1 == keys.right then
+				baredit = t[activetab]["url"]
+			elseif baredit == "#SEL" then
 				if p1 == keys.enter then
 					baredit = t[activetab]["url"]
 				else

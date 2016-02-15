@@ -1,7 +1,9 @@
 local args = ... or {}
-local ksml = args[1] or "Lemmmy is shit[KSML]Jay[SHIT]OK?"
+local ksml = args[1] or "satan[KSML]Well[X:10][C:RED]FUCK"
 local kasm = args[2] or {}
-local w = args[3]
+local w = args[3] or 50 --screen width
+local cs = 50 --container width
+local cs = 1 --container start
 
 local lines = 0
 local x, y = args[3] or 1, args[4] or 1
@@ -45,7 +47,7 @@ local colorsLookupTable = {
 	["LEMMMYSSOUL"] = "f",
 }
 
-local function makemea (thing, from)
+local function makemea(thing,from)
 	if thing == "color" then
 		local colorKey = colorsLookupTable[from]
 		if colorKey ~= nil then
@@ -60,7 +62,12 @@ local function insert(ch)
 	if x == 1 + #kasm[y]/3 then
 		x = x + 1
 		kasm[y] = a..ch..b..fg:sub(#fg)..c..bg:sub(#bg)
+	else
+		local a1,a2,b1,b2,c1,c2 = a:sub(1,x-1),a:sub(x+1),b:sub(1,x-1),b:sub(x+1),c:sub(1,x-1),c:sub(x+1)
+		x = x + 1
+		kasm[y] = a1..ch..a2..b1..fg:sub(#fg)..b2..c1..bg:sub(#bg)..c2
 	end
+	if x > w then go2(cs,y+1) end
 end
 
 local function go2(xx,yy)
@@ -68,12 +75,14 @@ local function go2(xx,yy)
 		if kasm[i] == nil then kasm[i] = "" end
 	end
 	y = yy
-	if xx > 1 then
-		x = #kasm[y]/3
-		while #kasm[y]/3 < xx do
+	if xx > #kasm[y]/3 then
+		x = #kasm[y]/3 + 1
+		while #kasm[y]/3 < xx-1 do
 			insert("\009")
 			os.sleep()
 		end
+	elseif x > 1 then
+		x = xx
 	else
 		x = 1
 	end
@@ -81,11 +90,9 @@ end
 
 local function parse(tag,arg,closing)
 	if tag == "A" then
-
+	
 	elseif tag == "BR" then
-		y = y + 1
-		x = 1
-		if kasm[y] == nil then kasm[y] = "" end
+		go2(cs,y+1)
 	elseif tag == "C" then
 		if not closing then
 			arg = arg:upper()
@@ -94,12 +101,10 @@ local function parse(tag,arg,closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
-	elseif tag == "BLAMETARAS" then
-		print("Blame Taras!")
-		os.sleep (2)
-		os.shutdown ()
-	elseif tag == "SHIT" then
-		go2(1,2)
+	elseif tag == "CR" then
+		x = 1
+	elseif tag == "X" then
+		go2(tonumber(arg),y)
 	end
 end
 
@@ -127,6 +132,6 @@ while #ksml > 0 do
 	end
 	print(ksml)
 	print(kasm[1])
-	print(kasm[2])
+	--print(kasm[2])
 	os.sleep(1)
 end
