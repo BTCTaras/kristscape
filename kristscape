@@ -2,14 +2,28 @@ local version = "0.5.0"
 local codeisamess = true
 
 local function CALL(server)
-	http.request(server,nil,headers)
+	http.request(server, nil, headers)
 end
 
 local hardware = "Computer"
-if turtle then hardware = "Turtle" end
-if pocket then hardware = "Pocket Computer" end
-if term.isColor() then hardware = "Advanced "..hardware end
-if command then hardware = "Command Computer" end
+
+do
+	if turtle then
+		hardware = "Turtle"
+	end
+
+	if pocket then
+		hardware = "Pocket Computer"
+	end
+
+	if term.isColour() then
+		hardware = "Advanced " .. hardware
+	end
+
+	if command then
+		hardware = "Command Computer"
+	end
+end
 
 local t = {}
 local tabs = 0
@@ -18,30 +32,34 @@ local baredit = ""
 
 local coloxrs = colours or colors
 coloxrs.grxy = coloxrs.grey or coloxrs.gray
-coloxrs.lightGrxy = coloxrs.lightGray or coloxrs.lightGrey
+coloxrs.lightGrxy = coloxrs.lightGrey or coloxrs.lightGray
 
 local w, h = term.getSize()
 local xy, tc, bg = term.setCursorPos, term.setTextColor, term.setBackgroundColor
 
-local port = window.create(term.current(),1,4,w,h-4)
-port.setBackgroundColor(coloxrs.white)
+local port = window.create(term.current(), 1, 4, w, h - 4)
+port.setBackgroundColour(coloxrs.white)
 port.clear()
 
 local server = {}
-server["dns"] = "http://krist.ceriat.net/?a="
+server.dns = "http://krist.ceriat.net/?a="
+
+local kristScapeUserAgent = "KristScape/%s (%s; %s; #%d; en-gb)"
 
 local headers = {
-	["User-Agent"] = "KristScape/"..version.." ("..hardware.."; "..os.version().."; #"..os.getComputerID().."; en-us)",
-	["X-Magic"] = "plugh",
+	["User-Agent"] = kristScapeUserAgent:format(version, hardware, os.version(), os.getComputerID());
+	["X-Magic"] = "plugh";
 }
 
 local function drawtabs()
-	local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
+	local tw = math.min(14, math.floor((w - math.min(9, tabs) - 4) / math.min(9, tabs)))
 	xy(2,1)
 	bg(coloxrs.black)
 	term.clearLine()
+
 	for i = 1, tabs do
 		xy((tw+1)*(i-1)+2,1)
+
 		if i == activetab then
 			bg(coloxrs.lightGrxy)
 			tc(coloxrs.grxy)
@@ -49,36 +67,41 @@ local function drawtabs()
 			bg(coloxrs.grxy)
 			tc(coloxrs.lightGrxy)
 		end
-		local tt = t[i]["title"]:sub(1,tw-3)
-		term.write(" "..tt..string.rep(" ",tw-3-#tt))
+
+		local tt = t[i].title:sub(1, tw - 3)
+		term.write(" " .. tt .. string.rep(" ", tw - 3 - #tt))
 		tc(coloxrs.red)
 		term.write(" \215")
 	end
+
 	if tabs < 10 then
-		xy(2+(tw+1)*tabs,1)
+		xy(2 + (tw + 1) * tabs, 1)
 		bg(coloxrs.grxy)
 		tc(coloxrs.lightGrxy)
-		term.write(" + ")
+		return term.write(" + ")
 	end
 end
+
 local function setstatus(status)
 	bg(coloxrs.lightGrxy)
 	tc(coloxrs.black)
 	xy(1,h)
-	term.write(tostring(status)..string.rep(" ",25-#tostring(status)))
+	return term.write(tostring(status) .. string.rep(" ", 25 - #tostring(status)))
 end
-local function seturl(url,v)
+
+local function seturl(url, v)
 	bg(coloxrs.white)
 	tc(coloxrs.black)
 	xy(3,2)
 	term.write(string.rep(" ",w-4))
 	xy(3,2)
-	if v == nil or v == true or v == false then
+
+	if type(v) ~= "string" then
 		term.write(url)
 	elseif v == "#SEL" then
 		bg(coloxrs.cyan)
 		tc(coloxrs.white)
-		term.write(url:sub(-w+5))
+		term.write(url:sub(-w + 5))
 		bg(coloxrs.white)
 		tc(coloxrs.red)
 		term.write("_")
@@ -87,28 +110,43 @@ local function seturl(url,v)
 		term.write("_")
 	else
 		tc(coloxrs.red)
-		term.write(v:sub(-w+5).."_")
+		term.write(v:sub(-w + 5) .. "_")
 	end
+
 	bg(coloxrs.white)
+
 	if v == true and url:find(".kst") then
 		tc(coloxrs.green)
 		xy(10,2)
-		term.write(url:sub(8,url:find(".kst")+3))
+		term.write(url:sub(8, url:find(".kst") + 3))
 	end
 end
 local function fullrender(n)
-	local buffer = t[n]["buffer"]
-	buffer = {"Hello1234567890e","Worldabcdef0123"}
+	local buffer = t[n].buffer
+
+	buffer = {
+		"Hello1234567890e",
+		"Worldabcdef0123"
+	}
+
 	port.setBackgroundColor(coloxrs.white)
 	port.clear()
+
 	for i=1,#buffer do
 		if i == 1 and #buffer[i] % 3 == 1 then
-			port.setBackgroundColor(2^tonumber(buffer[i]:sub(#buffer[i]-1),16))
+			port.setBackgroundColor(2 ^ tonumber(buffer[i]:sub(#buffer[i] - 1), 16))
 			port.clear()
-			buffer[i] = buffer[i]:sub(1,#buffer[i]-1)
+			buffer[i] = buffer[i]:sub(1, #buffer[i] - 1)
 		end
-		if #buffer[i] % 3 ~= 0 then break end
-		local a,b,c = buffer[i]:sub(1,#buffer[i]/3),buffer[i]:sub(#buffer[i]/3+1,2/3*#buffer[i]),buffer[i]:sub(2/3*#buffer[i]+1)
+
+		if #buffer[i] % 3 ~= 0 then
+			break
+		end
+
+		local a = buffer[i]:sub(1, #buffer[i] / 3)
+		local b = buffer[i]:sub(#buffer[i] / 3 + 1, 2 / 3 * #buffer[i])
+		local c = buffer[i]:sub(2 / 3 * #buffer[i] + 1)
+
 		port.setCursorPos(1,i)
 		port.blit(a,b,c)
 	end
@@ -122,9 +160,13 @@ local function log(file,text)
 	--]]
 end
 
-local function fixurl(url,thing)
-	local name
-	if url:sub(1,7) ~= "http://" then url = "http://" .. url end
+local function fixurl(url, thing)
+	local name = nil
+
+	if url:sub(1,7) ~= "http://" then
+		url = "http://" .. url
+	end
+
 	if url:sub(1,7) == "http://" then
 		if not url:sub(8):find(".kst") then
 			url = url:gsub(".dia",".kst",1)
@@ -132,17 +174,26 @@ local function fixurl(url,thing)
 			url = url:gsub(".qst",".kst",1)
 			url = url:gsub(".lra",".kst",1)
 		end
+
 		if not url:sub(8):find("/") then
 			url = url .. "/"
 		end
+
 		name = url:sub(8,url:sub(8):find("/")-1)
 	end
-	if thing == "url" then return url end
-	if thing == "name" then return name:gsub(".kst","") end
+
+	if thing == "url" then
+		return url
+	end
+	
+	if thing == "name" then
+		return name:gsub(".kst","")
+	end
 end
 
 local tab = {}
-tab["open"] = function(url)
+
+function tab.open(url)
 	tabs = tabs + 1
 	tab.reset(tabs)
 	tab.switch(tabs)
@@ -152,7 +203,8 @@ tab["open"] = function(url)
 	end
 	drawtabs()
 end
-tab["reset"] = function(i)
+
+function tab.reset(i)
 	t[i] = {}
 	t[i]["title"] = "New Tab"
 	t[i]["url"] = ""
@@ -163,37 +215,44 @@ tab["reset"] = function(i)
 	t[i]["buffer"] = {}
 	t[i]["momentum"] = 100000
 end
-tab["switch"] = function(n)
+
+function tab.switch(n)
 	activetab = n
 	seturl(t[n]["url"],t[n]["certified"])
 	drawtabs()
 end
-tab["load"] = function(n,url)
+
+function tab.load(n, url)
 	if url then
 		t[n]["url"] = fixurl(baredit,"url")
 		t[n]["name"] = fixurl(baredit,"name")
-		t[n]["title"] = fixurl(baredit,"name")..".kst"
+		t[n]["title"] = fixurl(baredit,"name") .. ".kst"
 		seturl(t[activetab]["url"])
 		drawtabs()
 		log("history",t[n]["url"])
 	end
-	CALL(server["dns"]..t[n]["name"].."#at"..tostring(activetab-1))
+
+	CALL(server["dns"] .. t[n]["name"] .. "#at" .. tostring(activetab - 1))
 	setstatus("Polling DNS...")
 end
-tab["close"] = function(n)
+
+function tab.close(n)
 	for i=n+1,tabs do
-		t[i-1] = t[i]
+		t[i - 1] = t[i]
 	end
+
 	tabs = tabs - 1
+
 	if tabs == 0 then
 		running = false
 	else
 		if activetab == n then
-			tab.switch(math.min(n,tabs))
+			tab.switch(math.min(n, tabs))
 		elseif activetab > n then
 			tab.switch(activetab - 1)
 		end
 	end
+
 	drawtabs()
 end
 
@@ -236,32 +295,42 @@ xy(4,4)
 
 local loading = false
 local running = true
+
 tab.open("http://x.kst/")
+
 while tabs > 0 do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
+
 	if ev == "http_success" then
-		log("http",p2:getResponseCode().." "..p1)
-		if p1:sub(1,#server["dns"]) == server["dns"] then
-			local targettab = tonumber(p1:sub(#p1,#p1))+1
-			local response = p2:readAll()
+		log("http", p2.getResponseCode() .. " " .. p1)
+
+		if p1:sub(1, #server.dns) == server.dns then
+			local targettab = tonumber(p1:sub(#p1, #p1)) + 1
+			local response = p2.readAll()
+
 			if response:sub(1,1) == "$" then
 				setstatus("Forwarding...")
-				CALL(server["dns"]..response:sub(2):gsub(".kst","").."#at"..tostring(targettab-1))
-				t[targettab]["url"] = fixurl(response:sub(2),"url")
-				t[targettab]["name"] = response:sub(2):gsub(".kst","")
-				seturl(fixurl(response:sub(2),"url"))
+				CALL(server["dns"] .. response:sub(2):gsub(".kst", "") .. "#at" .. tostring(targettab - 1))
+				t[targettab]["url"] = fixurl(response:sub(2), "url")
+				t[targettab]["name"] = response:sub(2):gsub(".kst", "")
+				seturl(fixurl(response:sub(2), "url"))
 			elseif #response > 0 then
 				setstatus("Downloading page...")
-				CALL("http://"..response)
-				t[targettab]["http"] = fixurl(response,"url")
+				CALL("http://" .. response)
+				t[targettab]["http"] = fixurl(response, "url")
 			else
 				setstatus("No site found")
 			end
 		else
 			for i=1,10 do
 				if t[i]["http"] == p1 then
-					t[i]["ksml"] = p2:readAll()
-					if activetab == i then setstatus("Done") fullrender(i) end
+					t[i]["ksml"] = p2.readAll()
+					
+					if activetab == i then
+						setstatus("Done")
+						fullrender(i)
+					end
+
 					break
 				end
 			end
@@ -271,25 +340,27 @@ while tabs > 0 do
 		-- rip ceriat 2007-2016
 	elseif ev == "mouse_click" then
 		baredit = ""
-		seturl(t[activetab]["url"],t[activetab]["certified"])
+		seturl(t[activetab].url, t[activetab].certified)
+
 		if p3 == 1 then -- Tabs
-			local tw = math.min(14,math.floor((w-math.min(9,tabs)-4)/math.min(9,tabs)))
+			local tw = math.min(14, math.floor((w - math.min(9, tabs) - 4) / math.min(9, tabs)))
 			p2 = p2 - 1
-			if math.ceil(p2/(tw+1)) ~= p2/(tw+1) then
-				if tabs < 10 and math.ceil(p2/(tw+1)) == tabs + 1 and p2%(tw+1) <= 3 then
+
+			if math.ceil(p2 / (tw + 1)) ~= p2 / (tw + 1) then
+				if tabs < 10 and math.ceil(p2 / (tw + 1)) == tabs + 1 and p2 % (tw + 1) <= 3 then
 					tab.open()
 				else
-					if tw == p2%(tw+1) then
-						tab.close(math.ceil(p2/(tw+1)))
+					if tw == p2 % (tw + 1) then
+						tab.close(math.ceil(p2 / (tw + 1)))
 					elseif math.ceil(p2/(tw+1)) <= tabs then
-						tab.switch(math.ceil(p2/(tw+1)))
+						tab.switch(math.ceil(p2 / (tw + 1)))
 					end
 				end
 			end
 		elseif p3 == 2 and p2 > 2 and p2 < w - 2 then -- Address bar
 			if baredit == "" then
 				baredit = "#SEL"
-				seturl(t[activetab]["url"],baredit)
+				seturl(t[activetab].url,baredit)
 			end
 		elseif p3 == h then -- Status bar
 			
@@ -303,32 +374,38 @@ while tabs > 0 do
 			else
 				baredit = baredit .. p1
 			end
-			seturl(t[activetab]["url"],baredit)
+			seturl(t[activetab].url,baredit)
 		end
 	elseif ev == "key" then
 		if #baredit > 0 then
 			if p1 == keys.right then
-				baredit = t[activetab]["url"]
+				baredit = t[activetab].url
 			elseif baredit == "#SEL" then
 				if p1 == keys.enter then
-					baredit = t[activetab]["url"]
+					baredit = t[activetab].url
 				else
 					baredit = "#NUL "
 				end
 			end
+
 			if p1 == keys.backspace then
-				baredit = baredit:sub(1,#baredit-1)
-				if #baredit == 0 then baredit = "#NUL" end
+				baredit = baredit:sub(1, #baredit - 1)
+
+				if #baredit == 0 then
+					baredit = "#NUL"
+				end
 			end
+
 			if p1 == keys.enter then
 				tab.load(activetab,baredit)
 				baredit = ""
 			else
-				seturl(t[activetab]["url"],baredit)
+				seturl(t[activetab].url,baredit)
 			end
 		end
 	end
 end
+
 bg(coloxrs.black)
 term.clear()
 xy(1,1)
