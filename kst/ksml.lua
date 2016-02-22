@@ -1,5 +1,5 @@
 local args = ... or {}
-local ksml = args[1] or "satan[KSML]Well[X:10][C:RED]FUCK"
+local ksml = args[1] or "satan[KSML]Well[X:10][C:RED]FUCK [CHAR:4][ID] ok[/KSML]die"
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cs = 50 --container width
@@ -10,7 +10,9 @@ local x, y = args[3] or 1, args[4] or 1
 
 local fg,bg = "f","0"
 
-local colorsLookupTable = {
+local lookup = {}
+
+lookup["colors"] = {
 	["WHITE"] = "0",
 	["ORANGE"] = "1",
 	["MAGENTA"] = "2",
@@ -21,6 +23,8 @@ local colorsLookupTable = {
 	["LIGHTGREEN"] = "5",
 	["LTGREEN"] = "5",
 	["PINK"] = "6",
+	["LIGHTRED"] = "6",
+	["LTRED"] = "6",
 	["GRAY"] = "7",
 	["GREY"] = "7",
 	["GRXY"] = "7",
@@ -42,14 +46,66 @@ local colorsLookupTable = {
 	["BLUE"] = "b",
 	["BROWN"] = "c",
 	["GREEN"] = "d",
+	["DARKLIME"] = "d",
+	["DKLIME"] = "d",
 	["RED"] = "e",
 	["BLACK"] = "f",
 	["LEMMMYSSOUL"] = "f",
+	["THEMEFG"] = "x",
+	["THEMEBG"] = "x",
 }
+
+lookup["characters"] = {
+	["SMILEY OUTLINE"] = "\001",
+	["SMILEY"] = "\002",
+	["HEART"] = "\003",
+	["DIAMOND"] = "\004",
+	["CLUB"] = "\005",
+	["SPADE"] = "\006",
+	["BULLET"] = "\007",
+	["LINEBREAK"] = "[BR]",
+	["MALE"] = "\011",
+	["FEMALE"] = "\012",
+	["NOTE"] = "\014",
+	["NOTES"] = "\015",
+	["RIGHT POINTER"] = "\016",
+	["LEFT POINTER"] = "\017",
+	["UP DOWN ARROW"] = "\018",
+	["PARAGRAPH"] = "\020",
+	["PILCROW"] = "\020",
+	["SECTION"] = "\021",
+	["RECTANGLE"] = "\022",
+	
+	--Unicode
+	["WHITE SMILING FACE"] = "\001",
+	["BLACK SMILING FACE"] = "\002",
+	["BLACK HEART SUIT"] = "\003",
+	["BLACK DIAMOND SUIT"] = "\004",
+	["BLACK CLUB SUIT"] = "\005",
+	["BLACK SPADE SUIT"] = "\006",
+	["INVERSE BULLET"] = "\008",
+	["MALE SIGN"] = "\011",
+	["FEMALE SIGN"] = "\012",
+	["EIGTH NOTE"] = "\014",
+	["BEAMED SIXTEENTH NOTES"] = "\015",
+	["BLACK RIGHT-POINTING POINTER"] = "\016",
+	["BLACK LEFT-POINTING POINTER"] = "\017",
+	["DOUBLE EXCLAMATION POINT"] = "\019",
+	["PILCROW SIGN"] = "\020",
+	["SECTION SIGN"] = "\021",
+	["BLACK RECTANGLE"] = "\022",
+	["UP DOWN ARROW WITH BASE"] = "\023",
+}
+for i=1,255 do
+	lookup.characters[tostring(i)] = loadstring("return '\\"..i.."'")()
+	if i < 10 then lookup.characters["00"..tostring(i)] = loadstring("return '\\"..i.."'")() end
+	if i < 100 then lookup.characters["0"..tostring(i)] = loadstring("return '\\"..i.."'")() end
+end
+
 
 local function makemea(thing,from)
 	if thing == "color" then
-		local colorKey = colorsLookupTable[from]
+		local colorKey = lookup.colors[from]
 		if colorKey ~= nil then
 			return colorKey
 		end
@@ -101,8 +157,16 @@ local function parse(tag,arg,closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "CHAR" then
+		ksml = lookup.characters[arg:upper()] .. ksml
 	elseif tag == "CR" then
 		x = 1
+	elseif tag == "END" then
+		ksml = ""
+	elseif tag == "KSML" and closing then
+		ksml = ""
+	elseif tag == "ID" then
+		ksml = os.getComputerID()..ksml
 	elseif tag == "X" then
 		go2(tonumber(arg),y)
 	end
