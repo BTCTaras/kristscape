@@ -99,7 +99,7 @@ lookup["characters"] = {
 	["UP DOWN ARROW WITH BASE"] = "\023",
 }
 
-for i = 1, 255 do
+for i = 1, 255 do -- What' ya gonna do bout unicode?
 	local s = tostring (i)
 	-- Pad s from the left to 3 chars (load is supplied by bios.lua and loadstring is removed in lua 5.2)
 	local v = load ("return '\\" .. string.rep ("0", 3 - #s) .. s .. "'")()
@@ -156,7 +156,7 @@ end
 
 local function parse(tag, arg, closing)
 	if tag == "A" then
-		
+
 	elseif tag == "C" then
 		if not closing then
 			arg = arg:upper()
@@ -177,6 +177,16 @@ local function parse(tag, arg, closing)
 		ksml = ""
 	elseif tag == "ID" then
 		ksml = os.getComputerID() .. ksml
+	elseif tag == "SCRIPT" then
+		if not closing then
+			if arg == "LUA" then
+
+			elseif arg == "INQUIRE" then
+
+			end
+		else
+
+		end
 	elseif tag == "X" then
 		go2(tonumber(arg),y)
 	end

@@ -1,5 +1,5 @@
 local version = "0.5.1"
-local codeisamess = true -- Maybe
+local code_is_a_mess = true
 
 local function CALL(server)
 	http.request(server, nil, headers)
@@ -8,23 +8,16 @@ end
 local hardware = "Computer"
 
 do
-	if turtle then
-		hardware = "Turtle"
-	end
-
-	if pocket then
-		hardware = "Pocket Computer"
-	end
-
-	if command then
-		hardware = "Command Computer"
-	end
+	if turtle then hardware = "Turtle" end
+	if pocket then hardware = "Pocket Computer" end
+	if command then hardware = "Command Computer" end
 
 	if term.isColour() then
 		hardware = "Advanced " .. hardware
 	end
 end
 
+local tabs = {}
 local t = {}
 local tabs = 0
 local activetab = 1
@@ -121,6 +114,7 @@ local function seturl(url, v)
 		term.write(url:sub(8, url:find(".kst") + 3))
 	end
 end
+
 local function fullrender(n)
 	local buffer = t[n].buffer
 
@@ -191,55 +185,85 @@ local function fixurl(url, thing)
 	end
 end
 
+local function class ()
+	local c = {}
+	c.__index = c
+
+	local mt = {}
+	mt.__call = function (cls, ...)
+		local obj = {}
+		setmetatable (obj, c)
+
+		if cls.init then
+			cls.init (obj, ...)
+		end
+
+		return obj
+	end
+
+	setmetatable (c, mt)
+	return c
+end
+
+
+
+local tabClass = class ()
+
+function tabClass:init (active)
+	self:reset (active)
+end
+
+function tabClass:reset (active)
+	self.title = "New Tab"
+	self.url = ""
+	self.http = ""
+	self.name = ""
+	self.ksml = ""
+	self.certified = false
+	self.buffer = {}
+	self.momentum = 100000
+	self.active = active or false
+end
+
+function tabClass:load (url)
+	if url then
+		self.url = fixurl(baredit,"url")
+		self.name = fixurl(baredit,"name")
+		self.title = fixurl(baredit,"name") .. ".kst"
+		--seturl(t[activetab]["url"]) FIXME
+		drawtabs()
+		log("history",self.url)
+	end
+
+	CALL(server["dns"] .. self.name .. "#at" .. tostring(activetab - 1))
+	setstatus("Polling DNS...")
+end
+
 local tab = {}
 
 function tab.open(url)
 	tabs = tabs + 1
-	tab.reset(tabs)
+	t[tabs]:reset ()
 	tab.switch(tabs)
 	if url then
-		t[tabs]["url"] = url
+		t[tabs].url = url
 		seturl(url)
 	end
 	drawtabs()
 end
 
-function tab.reset(i)
-	t[i] = {}
-	t[i]["title"] = "New Tab"
-	t[i]["url"] = ""
-	t[i]["http"] = ""
-	t[i]["name"] = ""
-	t[i]["ksml"] = ""
-	t[i]["certified"] = false
-	t[i]["buffer"] = {}
-	t[i]["momentum"] = 100000
-end
-
 function tab.switch(n)
 	activetab = n
-	seturl(t[n]["url"],t[n]["certified"])
+	seturl(t[n].url,t[n].certified)
 	drawtabs()
 end
 
-function tab.load(n, url)
-	if url then
-		t[n]["url"] = fixurl(baredit,"url")
-		t[n]["name"] = fixurl(baredit,"name")
-		t[n]["title"] = fixurl(baredit,"name") .. ".kst"
-		seturl(t[activetab]["url"])
-		drawtabs()
-		log("history",t[n]["url"])
-	end
-
-	CALL(server["dns"] .. t[n]["name"] .. "#at" .. tostring(activetab - 1))
-	setstatus("Polling DNS...")
-end
-
 function tab.close(n)
+	local oldT = t[n]
 	for i=n+1,tabs do
 		t[i - 1] = t[i]
 	end
+	t[tabs] = n
 
 	tabs = tabs - 1
 
@@ -257,7 +281,7 @@ function tab.close(n)
 end
 
 for i=1,10 do
-	tab.reset(i)
+	t[i] = tabClass (i)
 end
 
 local function drawhud()
@@ -398,7 +422,7 @@ while tabs > 0 do
 			end
 
 			if p1 == keys.enter then
-				tab.load(activetab,baredit)
+				t[activetab]:load (baredit)
 				baredit = ""
 			else
 				seturl(t[activetab].url,baredit)
