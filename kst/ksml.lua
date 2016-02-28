@@ -1,5 +1,6 @@
 local args = ... or {}
-local ksml = args[1] or "satan[KSML]Well[X:10][C:RED]FUCK [CHAR:4][ID] ok[/KSML]die"
+local debug = true
+local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cs = 50 --container width
@@ -142,6 +143,7 @@ local function go2(xx,yy)
 	else
 		x = 1
 	end
+	if x < 1 then x = 1 end
 end
 
 local function parse(tag,arg,closing)
@@ -157,16 +159,26 @@ local function parse(tag,arg,closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "HL" then
+		if not closing then
+			arg = arg:upper()
+			bg = bg .. makemea("color",arg)
+		else
+			bg = bg:sub(1,#bg-1)
+			if bg == "" then bg = "0" end
+		end
 	elseif tag == "CHAR" then
 		ksml = lookup.characters[arg:upper()] .. ksml
 	elseif tag == "CR" then
 		x = 1
 	elseif tag == "END" then
 		ksml = ""
-	elseif tag == "KSML" and closing then
-		ksml = ""
 	elseif tag == "ID" then
 		ksml = os.getComputerID()..ksml
+	elseif tag == "KSML" and closing then
+		ksml = ""
+	elseif tag == "LEFT" then
+		go2(x-tonumber(arg or 1),y)
 	elseif tag == "X" then
 		go2(tonumber(arg),y)
 	end
@@ -194,8 +206,14 @@ while #ksml > 0 do
 		insert(ksml:sub(1,1))
 		ksml = ksml:sub(2)
 	end
-	print(ksml)
-	print(kasm[1])
-	--print(kasm[2])
-	os.sleep(1)
+	if debug then
+		term.setTextColor(colors.lightGray)
+		print(ksml)
+		term.setTextColor(colors.white)
+		for i=1,#kasm do print(kasm[i]) end
+		os.sleep(1)
+	end
+end
+if not debug and not args[1] then
+	for i=1,#kasm do print(kasm[i]) end
 end
