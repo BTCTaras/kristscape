@@ -1,5 +1,5 @@
-local version = "0.5.0"
-local codeisamess = true
+local version = "0.5.1"
+local codeisamess = true -- Maybe
 
 local function CALL(server)
 	http.request(server, nil, headers)
@@ -16,12 +16,12 @@ do
 		hardware = "Pocket Computer"
 	end
 
-	if term.isColour() then
-		hardware = "Advanced " .. hardware
-	end
-
 	if command then
 		hardware = "Command Computer"
+	end
+
+	if term.isColour() then
+		hardware = "Advanced " .. hardware
 	end
 end
 
@@ -185,7 +185,7 @@ local function fixurl(url, thing)
 	if thing == "url" then
 		return url
 	end
-	
+
 	if thing == "name" then
 		return name:gsub(".kst","")
 	end
@@ -325,7 +325,7 @@ while tabs > 0 do
 			for i=1,10 do
 				if t[i]["http"] == p1 then
 					t[i]["ksml"] = p2.readAll()
-					
+
 					if activetab == i then
 						setstatus("Done")
 						fullrender(i)
@@ -338,6 +338,7 @@ while tabs > 0 do
 		p2:close()
 	elseif ev == "http_failure" then
 		-- rip ceriat 2007-2016
+		log ("error", p1) -- TODO: Show the error (p1) to the user
 	elseif ev == "mouse_click" then
 		baredit = ""
 		seturl(t[activetab].url, t[activetab].certified)
@@ -363,9 +364,9 @@ while tabs > 0 do
 				seturl(t[activetab].url,baredit)
 			end
 		elseif p3 == h then -- Status bar
-			
+
 		elseif p2 == w then -- Scroll bar
-			
+
 		end
 	elseif ev == "char" then
 		if #baredit > 0 then

@@ -18,4 +18,3 @@
 - Contracting statements into a single line should be avoided.
 - Great amounts of chained if statements should be replaced by a lookup table.
 - If a function/variable inside the global table is used often, save it in a local variable.
-
