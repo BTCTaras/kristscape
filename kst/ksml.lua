@@ -1,10 +1,11 @@
 local args = ... or {}
 local debug = true
-local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
+local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML][TITLE]Test site[/TITLE]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cs = 50 --container width
 local cs = 1 --container start
+local title = args[4] or ""
 
 local lines = 0
 local x, y = args[3] or 1, args[4] or 1
@@ -53,7 +54,7 @@ lookup["colors"] = {
 	["BLACK"] = "f",
 	["LEMMMYSSOUL"] = "f",
 	["THEMEFG"] = "x",
-	["THEMEBG"] = "x",
+	["THEMEBG"] = "y"
 }
 
 lookup["characters"] = {
@@ -96,6 +97,7 @@ lookup["characters"] = {
 	["SECTION SIGN"] = "\021",
 	["BLACK RECTANGLE"] = "\022",
 	["UP DOWN ARROW WITH BASE"] = "\023",
+	["UP ARROW"] = "\024",
 }
 for i=1,255 do
 	lookup.characters[tostring(i)] = loadstring("return '\\"..i.."'")()
@@ -127,7 +129,7 @@ local function insert(ch)
 	if x > w then go2(cs,y+1) end
 end
 
-local function go2(xx,yy)
+function go2(xx,yy)
 	for i=1,yy do
 		if kasm[i] == nil then kasm[i] = "" end
 	end
@@ -159,6 +161,8 @@ local function parse(tag,arg,closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "CLEARTITLE" then
+		title = ""
 	elseif tag == "HL" then
 		if not closing then
 			arg = arg:upper()
@@ -179,6 +183,24 @@ local function parse(tag,arg,closing)
 		ksml = ""
 	elseif tag == "LEFT" then
 		go2(x-tonumber(arg or 1),y)
+	elseif tag == "REP" and arg and not closing then
+		arg = tonumber(arg or 1)
+		local krep = ksml
+		if ksml:upper():find("%[%/REP%]") then
+			krep = ksml:sub(1,ksml:upper():find("%[%/REP%]")-1)
+		end
+		for i=1,arg-1 do
+			ksml = krep..ksml
+		end
+	elseif tag == "TITLE" then
+		local nt = ksml
+		if ksml:upper():find("%[%/TITLE%]") then
+			nt = ksml:sub(1,ksml:upper():find("%[%/TITLE%]")-1)
+			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]")-1)
+		else
+			ksml = ""
+		end
+		title = title .. nt
 	elseif tag == "X" then
 		go2(tonumber(arg),y)
 	end
@@ -189,6 +211,7 @@ kasm[1] = ""
 
 while #ksml > 0 do
 	next = ksml:find("%[")
+	
 	if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
 		local tag = ksml:sub(2,ksml:find("%]")-1)
 		local closing, arg = false
@@ -206,6 +229,7 @@ while #ksml > 0 do
 		insert(ksml:sub(1,1))
 		ksml = ksml:sub(2)
 	end
+	
 	if debug then
 		term.setTextColor(colors.lightGray)
 		print(ksml)
@@ -214,6 +238,9 @@ while #ksml > 0 do
 		os.sleep(1)
 	end
 end
+
 if not debug and not args[1] then
 	for i=1,#kasm do print(kasm[i]) end
 end
+
+go2 = nil
