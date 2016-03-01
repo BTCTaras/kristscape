@@ -98,6 +98,7 @@ lookup["characters"] = {
 	["BLACK RECTANGLE"] = "\022",
 	["UP DOWN ARROW WITH BASE"] = "\023",
 	["UP ARROW"] = "\024",
+	["DOWN ARROW"] = "\025",
 }
 for i=1,255 do
 	lookup.characters[tostring(i)] = loadstring("return '\\"..i.."'")()
@@ -150,7 +151,6 @@ end
 
 local function parse(tag,arg,closing)
 	if tag == "A" then
-	
 	elseif tag == "BR" then
 		go2(cs,y+1)
 	elseif tag == "C" then
@@ -175,6 +175,8 @@ local function parse(tag,arg,closing)
 		ksml = lookup.characters[arg:upper()] .. ksml
 	elseif tag == "CR" then
 		x = 1
+	elseif tag == "DOWN" then
+		go2(x,y-tonumber(arg or 1))
 	elseif tag == "END" then
 		ksml = ""
 	elseif tag == "ID" then
@@ -183,6 +185,8 @@ local function parse(tag,arg,closing)
 		ksml = ""
 	elseif tag == "LEFT" then
 		go2(x-tonumber(arg or 1),y)
+	elseif tag == "LF" then
+		go2(x,y+1)
 	elseif tag == "REP" and arg and not closing then
 		arg = tonumber(arg or 1)
 		local krep = ksml
@@ -192,15 +196,21 @@ local function parse(tag,arg,closing)
 		for i=1,arg-1 do
 			ksml = krep..ksml
 		end
-	elseif tag == "TITLE" then
+	elseif tag == "RIGHT" or tag == "SKIP" then
+		go2(x+tonumber(arg or 1),y)
+	elseif tag == "TOP" then
+		go2(x,1)
+	elseif tag == "TITLE" and not closing then
 		local nt = ksml
 		if ksml:upper():find("%[%/TITLE%]") then
 			nt = ksml:sub(1,ksml:upper():find("%[%/TITLE%]")-1)
-			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]")-1)
+			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]"),#ksml)
 		else
 			ksml = ""
 		end
 		title = title .. nt
+	elseif tag == "UP" then
+		go2(x,y+tonumber(arg or 1))
 	elseif tag == "X" then
 		go2(tonumber(arg),y)
 	end
@@ -232,7 +242,8 @@ while #ksml > 0 do
 	
 	if debug then
 		term.setTextColor(colors.lightGray)
-		print(ksml)
+		term.write(ksml)
+		print()
 		term.setTextColor(colors.white)
 		for i=1,#kasm do print(kasm[i]) end
 		os.sleep(1)
