@@ -1,10 +1,12 @@
 --Signed hash of the rest of the file goes here
 local args = ... or {}
-local ksml = args[1] or "satan[KSML]Well[X:10][C:RED]FUCK [CHAR:4][ID] ok[/KSML]die"
+local debug = true
+local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML][TITLE]Test site[/TITLE]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cs = 50 --container width
 local cs = 1 --container start
+local title = args[4] or ""
 
 local lines = 0
 local x, y = args[3] or 1, args[4] or 1
@@ -53,7 +55,7 @@ lookup["colors"] = {
 	["BLACK"] = "f",
 	["LEMMMYSSOUL"] = "f",
 	["THEMEFG"] = "x",
-	["THEMEBG"] = "x",
+	["THEMEBG"] = "y"
 }
 
 lookup["colorcodes"] = {}
@@ -98,6 +100,8 @@ lookup["characters"] = {
 	["SECTION SIGN"] = "\021",
 	["BLACK RECTANGLE"] = "\022",
 	["UP DOWN ARROW WITH BASE"] = "\023",
+	["UP ARROW"] = "\024",
+	["DOWN ARROW"] = "\025",
 }
 
 for i = 1, 255 do -- What' ya gonna do bout unicode?
@@ -107,7 +111,7 @@ for i = 1, 255 do -- What' ya gonna do bout unicode?
 	lookup.characters [s] = v
 end
 
-for k, v in pairs (lookup.colors) do
+for k, v in pairs (lookup.colors) do -- So we can use [C:f]
 	lookup.colorcodes [tostring (v)] = tostring (k)
 end
 
@@ -117,7 +121,7 @@ local function makemea(thing,from)
 		local colorKey = lookup.colors[from]
 		if colorKey ~= nil then return colorKey end
 
-		colorKey = lookup.colorcodes[from]
+		colorKey = lookup.colorcodes[from:lower ()]
 		if colorKey ~= nil then return colorKey end
 
 		return "f" -- Default color
@@ -153,11 +157,13 @@ local function go2(xx, yy)
 	else
 		x = 1
 	end
+	if x < 1 then x = 1 end
 end
 
 local function parse(tag, arg, closing)
 	if tag == "A" then
-
+	elseif tag == "BR" then
+		go2(cs, y+1)
 	elseif tag == "C" then
 		if not closing then
 			arg = arg:upper()
@@ -166,15 +172,23 @@ local function parse(tag, arg, closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "CLEARTITLE" then
+		title = ""
+	elseif tag == "HL" then
+		if not closing then
+			arg = arg:upper()
+			bg = bg .. makemea("color",arg)
+		else
+			bg = bg:sub(1,#bg-1)
+			if bg == "" then bg = "0" end
+		end
 	elseif tag == "CHAR" then
 		ksml = lookup.characters[arg:upper()] .. ksml
-	elseif tag == "BR" then
-		go2(cs, y+1)
 	elseif tag == "CR" then
 		x = 1
+	elseif tag == "DOWN" then
+		go2(x,y-tonumber(arg or 1))
 	elseif tag == "END" then
-		ksml = ""
-	elseif tag == "KSML" and closing then
 		ksml = ""
 	elseif tag == "ID" then
 		ksml = os.getComputerID() .. ksml
@@ -186,6 +200,36 @@ local function parse(tag, arg, closing)
 		else
 			-- Not supported language
 		end
+	elseif tag == "KSML" and closing then
+		ksml = ""
+	elseif tag == "LEFT" then
+		go2(x - tonumber(arg or 1), y)
+	elseif tag == "LF" then
+		go2(x, y+1)
+	elseif tag == "REP" and arg and not closing then
+		arg = tonumber(arg or 1)
+		local krep = ksml
+		if ksml:upper():find("%[%/REP%]") then
+			krep = ksml:sub(1,ksml:upper():find("%[%/REP%]")-1)
+		end
+		for i=1,arg-1 do
+			ksml = krep..ksml
+		end
+	elseif tag == "RIGHT" or tag == "SKIP" then
+		go2(x+tonumber(arg or 1),y)
+	elseif tag == "TOP" then
+		go2(x,1)
+	elseif tag == "TITLE" and not closing then
+		local nt = ksml
+		if ksml:upper():find("%[%/TITLE%]") then
+			nt = ksml:sub(1,ksml:upper():find("%[%/TITLE%]")-1)
+			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]"),#ksml)
+		else
+			ksml = ""
+		end
+		title = title .. nt
+	elseif tag == "UP" then
+		go2(x,y+tonumber(arg or 1))
 	elseif tag == "X" then
 		go2(tonumber(arg),y)
 	end
@@ -196,6 +240,7 @@ kasm[1] = ""
 
 while #ksml > 0 do
 	next = ksml:find("%[")
+
 	if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
 		local tag = ksml:sub(2, ksml:find("%]")-1)
 		local closing, arg = false, nil
@@ -213,8 +258,17 @@ while #ksml > 0 do
 		insert(ksml:sub(1,1))
 		ksml = ksml:sub(2)
 	end
-	print(ksml)
-	print(kasm[1])
-	--print(kasm[2])
-	os.sleep(1)
+
+	if debug then
+		term.setTextColor(colors.lightGray)
+		term.write(ksml)
+		print()
+		term.setTextColor(colors.white)
+		for i=1,#kasm do print(kasm[i]) end
+		os.sleep(1)
+	end
+end
+
+if not debug and not args[1] then
+	for i=1,#kasm do print(kasm[i]) end
 end
