@@ -1,3 +1,4 @@
+--Signed hash of the rest of the file goes here
 local args = ... or {}
 local ksml = args[1] or "satan[KSML]Well[X:10][C:RED]FUCK [CHAR:4][ID] ok[/KSML]die"
 local kasm = args[2] or {}
@@ -180,12 +181,10 @@ local function parse(tag, arg, closing)
 	elseif tag == "SCRIPT" then
 		if not closing then
 			if arg == "LUA" then
-
 			elseif arg == "INQUIRE" then
-
 			end
 		else
-
+			-- Not supported language
 		end
 	elseif tag == "X" then
 		go2(tonumber(arg),y)

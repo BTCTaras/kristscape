@@ -189,31 +189,30 @@ local function class ()
 	local c = {}
 	c.__index = c
 
-	local mt = {}
-	mt.__call = function (cls, ...)
-		local obj = {}
-		setmetatable (obj, c)
+	mt = {
+		__call = function (cls, ...)
+			local obj = {}
+			setmetatable (obj, c)
 
-		if cls.init then
-			cls.init (obj, ...)
-		end
+			if cls.init then
+				cls.init (obj, ...)
+			end
 
-		return obj
-	end
+			return obj
+		end,
+	}
 
 	setmetatable (c, mt)
 	return c
 end
 
-
-
 local tabClass = class ()
 
-function tabClass:init (active)
-	self:reset (active)
+function tabClass:init ()
+	self:reset ()
 end
 
-function tabClass:reset (active)
+function tabClass:reset ()
 	self.title = "New Tab"
 	self.url = ""
 	self.http = ""
@@ -222,7 +221,6 @@ function tabClass:reset (active)
 	self.certified = false
 	self.buffer = {}
 	self.momentum = 100000
-	self.active = active or false
 end
 
 function tabClass:load (url)
@@ -281,7 +279,7 @@ function tab.close(n)
 end
 
 for i=1,10 do
-	t[i] = tabClass (i)
+	t[i] = tabClass ()
 end
 
 local function drawhud()
