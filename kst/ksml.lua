@@ -272,3 +272,5 @@ end
 if not debug and not args[1] then
 	for i=1,#kasm do print(kasm[i]) end
 end
+
+go2 = nil

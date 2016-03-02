@@ -228,7 +228,7 @@ function tabClass:load (url)
 		self.url = fixurl(baredit,"url")
 		self.name = fixurl(baredit,"name")
 		self.title = fixurl(baredit,"name") .. ".kst"
-		--seturl(t[activetab]["url"]) FIXME
+		seturl(t[activetab].url)
 		drawtabs()
 		log("history",self.url)
 	end
@@ -332,21 +332,21 @@ while tabs > 0 do
 
 			if response:sub(1,1) == "$" then
 				setstatus("Forwarding...")
-				CALL(server["dns"] .. response:sub(2):gsub(".kst", "") .. "#at" .. tostring(targettab - 1))
-				t[targettab]["url"] = fixurl(response:sub(2), "url")
-				t[targettab]["name"] = response:sub(2):gsub(".kst", "")
+				CALL(server.dns .. response:sub(2):gsub(".kst", "") .. "#at" .. tostring(targettab - 1))
+				t[targettab].url = fixurl(response:sub(2), "url")
+				t[targettab].name = response:sub(2):gsub(".kst", "")
 				seturl(fixurl(response:sub(2), "url"))
 			elseif #response > 0 then
 				setstatus("Downloading page...")
 				CALL("http://" .. response)
-				t[targettab]["http"] = fixurl(response, "url")
+				t[targettab].http. = fixurl(response, "url")
 			else
 				setstatus("No site found")
 			end
 		else
 			for i=1,10 do
-				if t[i]["http"] == p1 then
-					t[i]["ksml"] = p2.readAll()
+				if t[i].http == p1 then
+					t[i].ksml = p2.readAll()
 
 					if activetab == i then
 						setstatus("Done")
