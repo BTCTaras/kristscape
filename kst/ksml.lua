@@ -141,8 +141,8 @@ local function insert(ch)
 	if x > w then go2(cs,y+1) end
 end
 
-local function go2(xx, yy)
-	for i = 1, yy do
+function go2(xx,yy)
+	for i=1,yy do
 		if kasm[i] == nil then kasm[i] = "" end
 	end
 	y = yy
@@ -191,21 +191,13 @@ local function parse(tag, arg, closing)
 	elseif tag == "END" then
 		ksml = ""
 	elseif tag == "ID" then
-		ksml = os.getComputerID() .. ksml
-	elseif tag == "SCRIPT" then
-		if not closing then
-			if arg == "LUA" then
-			elseif arg == "INQUIRE" then
-			end
-		else
-			-- Not supported language
-		end
+		ksml = os.getComputerID()..ksml
 	elseif tag == "KSML" and closing then
 		ksml = ""
 	elseif tag == "LEFT" then
-		go2(x - tonumber(arg or 1), y)
+		go2(x-tonumber(arg or 1),y)
 	elseif tag == "LF" then
-		go2(x, y+1)
+		go2(x,y+1)
 	elseif tag == "REP" and arg and not closing then
 		arg = tonumber(arg or 1)
 		local krep = ksml
