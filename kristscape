@@ -339,7 +339,7 @@ while tabs > 0 do
 			elseif #response > 0 then
 				setstatus("Downloading page...")
 				CALL("http://" .. response)
-				t[targettab].http. = fixurl(response, "url")
+				t[targettab].http = fixurl(response, "url")
 			else
 				setstatus("No site found")
 			end
