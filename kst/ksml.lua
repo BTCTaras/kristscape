@@ -192,14 +192,6 @@ local function parse(tag, arg, closing)
 		ksml = ""
 	elseif tag == "ID" then
 		ksml = os.getComputerID() .. ksml
-	elseif tag == "SCRIPT" then
-		if not closing then
-			if arg == "LUA" then
-			elseif arg == "INQUIRE" then
-			end
-		else
-			-- Not supported language
-		end
 	elseif tag == "KSML" and closing then
 		ksml = ""
 	elseif tag == "LEFT" then
