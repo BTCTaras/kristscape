@@ -8,16 +8,23 @@ end
 local hardware = "Computer"
 
 do
-	if turtle then hardware = "Turtle" end
-	if pocket then hardware = "Pocket Computer" end
-	if command then hardware = "Command Computer" end
+	if turtle then
+		hardware = "Turtle"
+	end
+
+	if pocket then
+		hardware = "Pocket Computer"
+	end
+
+	if command then
+		hardware = "Command Computer"
+	end
 
 	if term.isColour() then
 		hardware = "Advanced " .. hardware
 	end
 end
 
-local tabs = {}
 local t = {}
 local tabs = 0
 local activetab = 1
@@ -360,7 +367,6 @@ while tabs > 0 do
 		p2:close()
 	elseif ev == "http_failure" then
 		-- rip ceriat 2007-2016
-		log ("error", p1) -- TODO: Show the error (p1) to the user
 	elseif ev == "mouse_click" then
 		baredit = ""
 		seturl(t[activetab].url, t[activetab].certified)
