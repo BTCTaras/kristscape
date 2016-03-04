@@ -243,6 +243,10 @@ function tabClass:load (url)
 	CALL(server["dns"] .. self.name .. "#at" .. tostring(activetab - 1))
 	setstatus("Polling DNS...")
 end
+--[[
+function tabClass.__tostring (obj) -- example
+	return self.url .. " " .. self.name .. " " .. self.title
+end]]--
 
 local tab = {}
 
