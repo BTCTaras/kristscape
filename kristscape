@@ -16,12 +16,12 @@ do
 		hardware = "Pocket Computer"
 	end
 
-	if command then
-		hardware = "Command Computer"
-	end
-
 	if term.isColour() then
 		hardware = "Advanced " .. hardware
+	end
+
+	if command then
+		hardware = "Command Computer"
 	end
 end
 
