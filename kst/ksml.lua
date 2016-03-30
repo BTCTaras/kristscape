@@ -1,3 +1,4 @@
+--Signed hash of the rest of the file goes here
 local args = ... or {}
 local debug = true
 local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML][TITLE]Test site[/TITLE]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
@@ -10,7 +11,7 @@ local title = args[4] or ""
 local lines = 0
 local x, y = args[3] or 1, args[4] or 1
 
-local fg,bg = "f","0"
+local fg, bg = "f", "0"
 
 local lookup = {}
 
@@ -57,6 +58,8 @@ lookup["colors"] = {
 	["THEMEBG"] = "y"
 }
 
+lookup["colorcodes"] = {}
+
 lookup["characters"] = {
 	["SMILEY OUTLINE"] = "\001",
 	["SMILEY"] = "\002",
@@ -77,7 +80,7 @@ lookup["characters"] = {
 	["PILCROW"] = "\020",
 	["SECTION"] = "\021",
 	["RECTANGLE"] = "\022",
-	
+
 	--Unicode
 	["WHITE SMILING FACE"] = "\001",
 	["BLACK SMILING FACE"] = "\002",
@@ -100,38 +103,46 @@ lookup["characters"] = {
 	["UP ARROW"] = "\024",
 	["DOWN ARROW"] = "\025",
 }
-for i=1,255 do
-	lookup.characters[tostring(i)] = loadstring("return '\\"..i.."'")()
-	if i < 10 then lookup.characters["00"..tostring(i)] = loadstring("return '\\"..i.."'")() end
-	if i < 100 then lookup.characters["0"..tostring(i)] = loadstring("return '\\"..i.."'")() end
+
+for i = 1, 255 do -- What' ya gonna do bout unicode?
+	local s = tostring (i)
+	-- Pad s from the left to 3 chars (load is supplied by bios.lua and loadstring is removed in lua 5.2)
+	local v = load ("return '\\" .. string.rep ("0", 3 - #s) .. s .. "'")()
+	lookup.characters [s] = v
+end
+
+for k, v in pairs (lookup.colors) do -- So we can use [C:f]
+	lookup.colorcodes [tostring (v)] = tostring (k)
 end
 
 
 local function makemea(thing,from)
 	if thing == "color" then
 		local colorKey = lookup.colors[from]
-		if colorKey ~= nil then
-			return colorKey
-		end
+		if colorKey ~= nil then return colorKey end
+
+		colorKey = lookup.colorcodes[from:lower ()]
+		if colorKey ~= nil then return colorKey end
+
 		return "f" -- Default color
 	end
 end
 
 local function insert(ch)
-	local a,b,c = kasm[y]:sub(1,#kasm[y]/3),kasm[y]:sub(#kasm[y]/3+1,2/3*#kasm[y]),kasm[y]:sub(2/3*#kasm[y]+1)
+	local a, b, c = kasm[y]:sub(1, #kasm[y]/3), kasm[y]:sub(#kasm[y]/3+1, 2/3*#kasm[y]), kasm[y]:sub(2/3*#kasm[y]+1)
 	if x == 1 + #kasm[y]/3 then
 		x = x + 1
-		kasm[y] = a..ch..b..fg:sub(#fg)..c..bg:sub(#bg)
+		kasm[y] = a .. ch .. b .. fg:sub(#fg) .. c .. bg:sub(#bg)
 	else
-		local a1,a2,b1,b2,c1,c2 = a:sub(1,x-1),a:sub(x+1),b:sub(1,x-1),b:sub(x+1),c:sub(1,x-1),c:sub(x+1)
+		local a1, a2, b1, b2, c1, c2 = a:sub(1, x-1), a:sub(x+1), b:sub(1, x-1), b:sub(x+1), c:sub(1, x-1), c:sub(x+1)
 		x = x + 1
-		kasm[y] = a1..ch..a2..b1..fg:sub(#fg)..b2..c1..bg:sub(#bg)..c2
+		kasm[y] = a1 .. ch .. a2 .. b1 .. fg:sub(#fg) .. b2 .. c1 .. bg:sub(#bg) .. c2
 	end
 	if x > w then go2(cs,y+1) end
 end
 
-function go2(xx,yy)
-	for i=1,yy do
+local function go2(xx, yy)
+	for i = 1, yy do
 		if kasm[i] == nil then kasm[i] = "" end
 	end
 	y = yy
@@ -149,10 +160,10 @@ function go2(xx,yy)
 	if x < 1 then x = 1 end
 end
 
-local function parse(tag,arg,closing)
+local function parse(tag, arg, closing)
 	if tag == "A" then
 	elseif tag == "BR" then
-		go2(cs,y+1)
+		go2(cs, y+1)
 	elseif tag == "C" then
 		if not closing then
 			arg = arg:upper()
@@ -180,13 +191,13 @@ local function parse(tag,arg,closing)
 	elseif tag == "END" then
 		ksml = ""
 	elseif tag == "ID" then
-		ksml = os.getComputerID()..ksml
+		ksml = os.getComputerID() .. ksml
 	elseif tag == "KSML" and closing then
 		ksml = ""
 	elseif tag == "LEFT" then
-		go2(x-tonumber(arg or 1),y)
+		go2(x - tonumber(arg or 1), y)
 	elseif tag == "LF" then
-		go2(x,y+1)
+		go2(x, y+1)
 	elseif tag == "REP" and arg and not closing then
 		arg = tonumber(arg or 1)
 		local krep = ksml
@@ -221,25 +232,25 @@ kasm[1] = ""
 
 while #ksml > 0 do
 	next = ksml:find("%[")
-	
+
 	if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
-		local tag = ksml:sub(2,ksml:find("%]")-1)
-		local closing, arg = false
+		local tag = ksml:sub(2, ksml:find("%]")-1)
+		local closing, arg = false, nil
 		if tag:find("%:") then
 			arg = tag:sub(tag:find("%:")+1)
-			tag = tag:sub(1,tag:find("%:")-1)
+			tag = tag:sub(1, tag:find("%:")-1)
 		end
 		if tag:sub(1,1) == "/" then
 			closing = true
 			tag = tag:sub(2)
 		end
 		ksml = ksml:sub(ksml:find("%]")+1)
-		parse(tag,arg,closing)
+		parse(tag, arg, closing)
 	else
 		insert(ksml:sub(1,1))
 		ksml = ksml:sub(2)
 	end
-	
+
 	if debug then
 		term.setTextColor(colors.lightGray)
 		term.write(ksml)
