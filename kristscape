@@ -1,5 +1,5 @@
 local version = "0.5.1"
-local code_is_a_mess = true
+local code_is_a_mess = "not necessarily"
 
 local function CALL(server)
 	http.request(server, nil, headers)
@@ -180,7 +180,7 @@ local function fixurl(url, thing)
 			url = url .. "/"
 		end
 
-		name = url:sub(8,url:sub(8):find("/")-1)
+		name = url:sub(8,url:sub(8):find("/")+6)
 	end
 
 	if thing == "url" then
@@ -192,7 +192,7 @@ local function fixurl(url, thing)
 	end
 end
 
-local function class ()
+local function class()
 	local c = {}
 	c.__index = c
 
@@ -213,13 +213,13 @@ local function class ()
 	return c
 end
 
-local tabClass = class ()
+local tabClass = class()
 
-function tabClass:init ()
-	self:reset ()
+function tabClass:init()
+	self:reset()
 end
 
-function tabClass:reset ()
+function tabClass:reset()
 	self.title = "New Tab"
 	self.url = ""
 	self.http = ""
@@ -252,7 +252,7 @@ local tab = {}
 
 function tab.open(url)
 	tabs = tabs + 1
-	t[tabs]:reset ()
+	t[tabs]:reset()
 	tab.switch(tabs)
 	if url then
 		t[tabs].url = url
@@ -290,7 +290,7 @@ function tab.close(n)
 end
 
 for i=1,10 do
-	t[i] = tabClass ()
+	t[i] = tabClass()
 end
 
 local function drawhud()
