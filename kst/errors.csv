@@ -1,0 +1,33 @@
+001,Illegally nested tags
+002,Unexpected closing tag
+003,HTTP not enabled
+004,No data received
+005,No DNS record found
+006,Generic exception
+007,Unsupported image format
+008,NFP image not stored locally
+009,Hostname not resolved
+010,No webpage found
+011,Blank response
+012,Webpage too complex
+013,Redirect loop detected
+014,Nested cells not supported
+015,Webpage too large
+016,Webpage took too long
+017,Too many redirects
+020,Name not configured
+021,Cannot reslove hostname
+022,Name does not exist
+023,CNAME loop detected
+024,Invalid A record
+025,Invalid CNAME record
+026,Cannot reach Krist node
+027,Too many CNAMEs
+060,Blacklisted by client
+061,Blacklisted by game server
+062,Blacklisted by syncnode
+063,Unavailable on game server
+064,Unavailable
+065,Unavailable on KS version
+068,Command computer required
+069,Adult content blocked
