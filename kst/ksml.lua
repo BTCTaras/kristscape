@@ -4,12 +4,17 @@ local debug = true
 local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML][TITLE]Test site[/TITLE]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
-local cs = 50 --container width
+local cw = 50 --container width
 local cs = 1 --container start
-local title = args[4] or ""
+local title = ""
+local nsfw = false
+
+local version = args[4] or "0.5.2"
+local error = 0
+local status = 0
 
 local lines = 0
-local x, y = args[3] or 1, args[4] or 1
+local x, y = 1, 1
 
 local fg, bg = "f", "0"
 
@@ -141,7 +146,7 @@ local function insert(ch)
 	if x > w then go2(cs,y+1) end
 end
 
-local function go2(xx, yy)
+function go2(xx, yy)
 	for i = 1, yy do
 		if kasm[i] == nil then kasm[i] = "" end
 	end
@@ -162,6 +167,12 @@ end
 
 local function parse(tag, arg, closing)
 	if tag == "A" then
+	elseif tag == "BLOCK" then
+		if arg:upper() == "SERVER" then error = 63 end
+		if arg == "" or arg == "*" then error = 64 end
+		if arg:upper() == version:upper() then error = 65 end
+		if not command and arg:upper() == "NOTCMD" then error = 68 end
+		if error > 0 then ksml = "" end
 	elseif tag == "BR" then
 		go2(cs, y+1)
 	elseif tag == "C" then
@@ -174,14 +185,6 @@ local function parse(tag, arg, closing)
 		end
 	elseif tag == "CLEARTITLE" then
 		title = ""
-	elseif tag == "HL" then
-		if not closing then
-			arg = arg:upper()
-			bg = bg .. makemea("color",arg)
-		else
-			bg = bg:sub(1,#bg-1)
-			if bg == "" then bg = "0" end
-		end
 	elseif tag == "CHAR" then
 		ksml = lookup.characters[arg:upper()] .. ksml
 	elseif tag == "CR" then
@@ -190,6 +193,14 @@ local function parse(tag, arg, closing)
 		go2(x,y-tonumber(arg or 1))
 	elseif tag == "END" then
 		ksml = ""
+	elseif tag == "HL" then
+		if not closing then
+			arg = arg:upper()
+			bg = bg .. makemea("color",arg)
+		else
+			bg = bg:sub(1,#bg-1)
+			if bg == "" then bg = "0" end
+		end
 	elseif tag == "ID" then
 		ksml = os.getComputerID() .. ksml
 	elseif tag == "KSML" and closing then
@@ -198,6 +209,8 @@ local function parse(tag, arg, closing)
 		go2(x - tonumber(arg or 1), y)
 	elseif tag == "LF" then
 		go2(x, y+1)
+	elseif tag == "NSFW" then
+		nsfw = true
 	elseif tag == "REP" and arg and not closing then
 		arg = tonumber(arg or 1)
 		local krep = ksml
@@ -266,3 +279,5 @@ if not debug and not args[1] then
 end
 
 go2 = nil
+status = error
+return kasm, title, status
