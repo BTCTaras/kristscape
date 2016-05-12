@@ -185,6 +185,7 @@ local function parse(tag, arg, closing)
 		end
 	elseif tag == "CLEAR" then
 		kasm = {}
+		go2(1,1)
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
