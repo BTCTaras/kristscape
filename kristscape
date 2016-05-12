@@ -1,4 +1,4 @@
-local version = "0.5.1"
+local version = "0.5.2"
 local code_is_a_mess = "not necessarily"
 
 local function CALL(server)
@@ -29,6 +29,7 @@ local t = {}
 local tabs = 0
 local activetab = 1
 local baredit = ""
+local certificates = ""
 
 local coloxrs = colours or colors
 coloxrs.grxy = coloxrs.grey or coloxrs.gray
@@ -43,6 +44,8 @@ port.clear()
 
 local server = {}
 server.dns = "http://krist.ceriat.net/?a="
+server.cert = "http://kscert.ceriat.net/"
+server.cert = "http://ceriat.net/kristnet/cert"
 
 local kristScapeUserAgent = "KristScape/%s (%s; %s; #%d; en-gb)"
 
@@ -50,6 +53,8 @@ local headers = {
 	["User-Agent"] = kristScapeUserAgent:format(version, hardware, os.version(), os.getComputerID());
 	["X-Magic"] = "plugh";
 }
+
+CALL(server.cert)
 
 local function drawtabs()
 	local tw = math.min(14, math.floor((w - math.min(9, tabs) - 4) / math.min(9, tabs)))
@@ -95,6 +100,7 @@ local function seturl(url, v)
 	xy(3,2)
 	term.write(string.rep(" ",w-4))
 	xy(3,2)
+	local entered = true
 
 	if type(v) ~= "string" then
 		term.write(url)
@@ -105,30 +111,33 @@ local function seturl(url, v)
 		bg(coloxrs.white)
 		tc(coloxrs.red)
 		term.write("_")
+		entered = false
 	elseif v:sub(1,1) == "#" then
 		tc(coloxrs.red)
 		term.write("_")
+		entered = false
 	else
 		tc(coloxrs.red)
 		term.write(v:sub(-w + 5) .. "_")
+		entered = false
 	end
 
 	bg(coloxrs.white)
 
-	if v == true and url:find(".kst") then
-		tc(coloxrs.green)
-		xy(10,2)
-		term.write(url:sub(8, url:find(".kst") + 3))
+	if url:find(".kst") and entered then
+		if certificates:find(url:sub(8, url:find(".kst") - 1)..";") then
+			tc(coloxrs.green)
+			xy(10,2)
+			term.write(url:sub(8, url:find(".kst") + 3))
+		end
 	end
 end
 
 local function fullrender(n)
-	local buffer = t[n].buffer
-
-	buffer = {
-		"Hello1234567890e",
-		"Worldabcdef0123"
-	}
+	local buffer-- = t[n].buffer
+	--print(t[n].ksml)
+	--os.sleep(2)
+	buffer = loadfile("kst/ksml.lua")(t[n].ksml,nil,nil,version)
 
 	port.setBackgroundColor(coloxrs.white)
 	port.clear()
@@ -136,7 +145,7 @@ local function fullrender(n)
 	for i=1,#buffer do
 		if i == 1 and #buffer[i] % 3 == 1 then
 			port.setBackgroundColor(2 ^ tonumber(buffer[i]:sub(#buffer[i] - 1), 16))
-			port.clear()
+			--port.clear()
 			buffer[i] = buffer[i]:sub(1, #buffer[i] - 1)
 		end
 
@@ -180,7 +189,7 @@ local function fixurl(url, thing)
 			url = url .. "/"
 		end
 
-		name = url:sub(8,url:sub(8):find("/")+6)
+		name = url:lower():sub(8,url:sub(8):find("/")+6)
 	end
 
 	if thing == "url" then
@@ -235,7 +244,7 @@ function tabClass:load (url)
 		self.url = fixurl(baredit,"url")
 		self.name = fixurl(baredit,"name")
 		self.title = fixurl(baredit,"name") .. ".kst"
-		seturl(t[activetab].url)
+		seturl(t[activetab].url,t[activetab].certified)
 		drawtabs()
 		log("history",self.url)
 	end
@@ -265,6 +274,7 @@ function tab.switch(n)
 	activetab = n
 	seturl(t[n].url,t[n].certified)
 	drawtabs()
+	fullrender(n)
 end
 
 function tab.close(n)
@@ -354,10 +364,25 @@ while tabs > 0 do
 			else
 				setstatus("No site found")
 			end
+		elseif p1:sub(1, #server.cert) == server.cert then
+			certificates = p2.readAll()
+			for i=1,10 do
+				if certificates:find(t[i].name..";") then
+					t[i].certified = true
+				else
+					t[i].certified = false
+				end
+			end
 		else
 			for i=1,10 do
 				if t[i].http == p1 then
 					t[i].ksml = p2.readAll()
+					if certificates:find(t[i].name..";") then
+						t[i].certified = true
+					else
+						t[i].certified = false
+					end
+					seturl(t[i].url,t[i].certified)
 
 					if activetab == i then
 						setstatus("Done")
