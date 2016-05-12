@@ -1,7 +1,7 @@
 --Signed hash of the rest of the file goes here
 local args = ... or {}
 local debug = true
-local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML][TITLE]Test site[/TITLE]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
+local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML][TITLE]Test site[/TITLE]I like trains[CLEAR]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cw = 50 --container width
@@ -183,6 +183,9 @@ local function parse(tag, arg, closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "CLEAR" then
+		kasm = {}
+		go2(1,1)
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
