@@ -8,6 +8,7 @@ local cw = 50 --container width
 local cs = 1 --container start
 local title = ""
 local nsfw = false
+local sandboxEnviroment = {} --If you want you can shorten the name later, also add whitelist of stuff that should be available
 
 local version = args[4] or "0.5.2"
 local error = 0
@@ -225,6 +226,14 @@ local function parse(tag, arg, closing)
 		end
 	elseif tag == "RIGHT" or tag == "SKIP" then
 		go2(x+tonumber(arg or 1),y)
+    elseif tag == "SCRIPT:LUA" and not closing then
+        if ksml:upper:find("%[%/SCRIPT%]") then
+            local script = ksml:sub(1,ksml:upper():find("%[%/SCRIPT%]")-1)
+            ksml = ksml:sub(ksml:upper():find("%[%/SCRIPT%]"),#ksml)
+            local eScript = loadstring(script)
+        else
+            --handle error stuff hear    
+        end
 	elseif tag == "TOP" then
 		go2(x,1)
 	elseif tag == "TITLE" and not closing then
