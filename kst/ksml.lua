@@ -10,6 +10,12 @@ local title = ""
 local nsfw = false
 local sandboxEnviroment = {} --If you want you can shorten the name later, also add whitelist of stuff that should be available
 
+local function addToSandboxEnv(name) --Someone PLEASE find a better name
+    local entry = _G[name]
+    local wmt = setmetatable({},{__index=entry, __metatable = "protected"})
+    sandboxEnviroment[name] = wmt
+end
+
 local version = args[4] or "0.5.2"
 local error = 0
 local status = 0
@@ -224,7 +230,7 @@ local function parse(tag, arg, closing)
 		for i=1,arg-1 do
 			ksml = krep .. ksml
 		end
-	elseif tag == "RIGHT" or tag == "SKIP" then
+    elseif tag == "RIGHT" or tag == "SKIP" then
 		go2(x+tonumber(arg or 1), y)
     elseif tag == "SCRIPT" and not closing then
         if ksml:upper:find("%[%/SCRIPT%]") then
