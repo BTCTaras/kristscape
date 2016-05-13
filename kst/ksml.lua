@@ -1,7 +1,7 @@
 --Signed hash of the rest of the file goes here
-local args = ... or {}
-local debug = true
-local ksml = args[1] or "<!DOCTYPE HTML><html><body><!--[KSML][TITLE]Test site[/TITLE]Welcome to my KristScape hell[LEFT:4]site![BR]It is [HL:YELLOW]good[/HL][BR][CHAR:HEART][/KSML]--><p>Welcome to my site!</p></body></html>"
+local args = {...}
+local debug = false
+local ksml = args[1]:gsub("\n","")
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cw = 50 --container width
@@ -183,6 +183,9 @@ local function parse(tag, arg, closing)
 			fg = fg:sub(1,#fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "CLEAR" then
+		kasm = {}
+		go2(1,1)
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
@@ -240,42 +243,46 @@ local function parse(tag, arg, closing)
 	end
 end
 
-ksml = ksml:sub(ksml:find("%[KSML%]")+6)
-kasm[1] = ""
+if ksml:find("%[KSML%]") then
+	ksml = ksml:sub(ksml:find("%[KSML%]")+6)
+	kasm[1] = ""
 
-while #ksml > 0 do
-	next = ksml:find("%[")
-
-	if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
-		local tag = ksml:sub(2, ksml:find("%]")-1)
-		local closing, arg = false, nil
-		if tag:find("%:") then
-			arg = tag:sub(tag:find("%:")+1)
-			tag = tag:sub(1, tag:find("%:")-1)
+	while #ksml > 0 do
+		next = ksml:find("%[")
+		
+		if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
+			local tag = ksml:sub(2,ksml:find("%]")-1)
+			local closing, arg = false
+			if tag:find("%:") then
+				arg = tag:sub(tag:find("%:")+1)
+				tag = tag:sub(1,tag:find("%:")-1)
+			end
+			if tag:sub(1,1) == "/" then
+				closing = true
+				tag = tag:sub(2)
+			end
+			ksml = ksml:sub(ksml:find("%]")+1)
+			parse(tag,arg,closing)
+		else
+			insert(ksml:sub(1,1))
+			ksml = ksml:sub(2)
 		end
-		if tag:sub(1,1) == "/" then
-			closing = true
-			tag = tag:sub(2)
+		
+		if debug then
+			term.setTextColor(colors.lightGray)
+			term.write(ksml)
+			print()
+			term.setTextColor(colors.white)
+			for i=1,#kasm do print(kasm[i]) end
+			os.sleep(1)
 		end
-		ksml = ksml:sub(ksml:find("%]")+1)
-		parse(tag, arg, closing)
-	else
-		insert(ksml:sub(1,1))
-		ksml = ksml:sub(2)
 	end
-
-	if debug then
-		term.setTextColor(colors.lightGray)
-		term.write(ksml)
-		print()
-		term.setTextColor(colors.white)
-		for i=1,#kasm do print(kasm[i]) end
-		os.sleep(1)
-	end
+else
+	error = 10
 end
 
 if not debug and not args[1] then
-	for i=1,#kasm do print(kasm[i]) end
+	--for i=1,#kasm do print(kasm[i]) end
 end
 
 go2 = nil
