@@ -1,7 +1,7 @@
 --Signed hash of the rest of the file goes here
 local args = {...}
 local debug = false
-local ksml = args[1]:gsub("\n","")
+local ksml = args[1]:gsub("\n", "")
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cw = 50 --container width
@@ -122,12 +122,12 @@ for k, v in pairs (lookup.colors) do -- So we can use [C:f]
 end
 
 
-local function makemea(thing,from)
+local function makemea(thing, from)
 	if thing == "color" then
 		local colorKey = lookup.colors[from]
 		if colorKey ~= nil then return colorKey end
 
-		colorKey = lookup.colorcodes[from:lower ()]
+		colorKey = lookup.colorcodes[from:lower()]
 		if colorKey ~= nil then return colorKey end
 
 		return "f" -- Default color
@@ -144,7 +144,7 @@ local function insert(ch)
 		x = x + 1
 		kasm[y] = a1 .. ch .. a2 .. b1 .. fg:sub(#fg) .. b2 .. c1 .. bg:sub(#bg) .. c2
 	end
-	if x > w then go2(cs,y+1) end
+	if x > w then go2(cs, y+1) end
 end
 
 function go2(xx, yy)
@@ -179,14 +179,14 @@ local function parse(tag, arg, closing)
 	elseif tag == "C" then
 		if not closing then
 			arg = arg:upper()
-			fg = fg .. makemea("color",arg)
+			fg = fg .. makemea("color", arg)
 		else
-			fg = fg:sub(1,#fg-1)
+			fg = fg:sub(1, #fg-1)
 			if fg == "" then fg = "f" end
 		end
 	elseif tag == "CLEAR" then
 		kasm = {}
-		go2(1,1)
+		go2(1, 1)
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
@@ -194,15 +194,15 @@ local function parse(tag, arg, closing)
 	elseif tag == "CR" then
 		x = 1
 	elseif tag == "DOWN" then
-		go2(x,y-tonumber(arg or 1))
+		go2(x, y-tonumber(arg or 1))
 	elseif tag == "END" then
 		ksml = ""
 	elseif tag == "HL" then
 		if not closing then
 			arg = arg:upper()
-			bg = bg .. makemea("color",arg)
+			bg = bg .. makemea("color", arg)
 		else
-			bg = bg:sub(1,#bg-1)
+			bg = bg:sub(1, #bg-1)
 			if bg == "" then bg = "0" end
 		end
 	elseif tag == "ID" then
@@ -219,36 +219,42 @@ local function parse(tag, arg, closing)
 		arg = tonumber(arg or 1)
 		local krep = ksml
 		if ksml:upper():find("%[%/REP%]") then
-			krep = ksml:sub(1,ksml:upper():find("%[%/REP%]")-1)
+			krep = ksml:sub(1, ksml:upper():find("%[%/REP%]")-1)
 		end
 		for i=1,arg-1 do
-			ksml = krep..ksml
+			ksml = krep .. ksml
 		end
 	elseif tag == "RIGHT" or tag == "SKIP" then
-		go2(x+tonumber(arg or 1),y)
-    elseif tag == "SCRIPT:LUA" and not closing then
+		go2(x+tonumber(arg or 1), y)
+    elseif tag == "SCRIPT" and not closing then
         if ksml:upper:find("%[%/SCRIPT%]") then
-            local script = ksml:sub(1,ksml:upper():find("%[%/SCRIPT%]")-1)
-            ksml = ksml:sub(ksml:upper():find("%[%/SCRIPT%]"),#ksml)
-            local eScript = loadstring(script)
+            local script = ksml:sub(1, ksml:upper():find("%[%/SCRIPT%]")-1)
+            ksml = ksml:sub(ksml:upper():find("%[%/SCRIPT%]"), #ksml)
+            if arg == "LUA" then
+                local eScript = loadstring(script)
+                setfenv(eScript, sandboxEnviroment)
+                eScript()
+            elseif arg == "INQUIRE" then
+                --Inquire language stuff here    
+            end
         else
             --handle error stuff hear    
         end
 	elseif tag == "TOP" then
-		go2(x,1)
+		go2(x, 1)
 	elseif tag == "TITLE" and not closing then
 		local nt = ksml
 		if ksml:upper():find("%[%/TITLE%]") then
-			nt = ksml:sub(1,ksml:upper():find("%[%/TITLE%]")-1)
-			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]"),#ksml)
+			nt = ksml:sub(1, ksml:upper():find("%[%/TITLE%]")-1)
+			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]"), #ksml)
 		else
 			ksml = ""
 		end
 		title = title .. nt
 	elseif tag == "UP" then
-		go2(x,y+tonumber(arg or 1))
+		go2(x, y+tonumber(arg or 1))
 	elseif tag == "X" then
-		go2(tonumber(arg),y)
+		go2(tonumber(arg), y)
 	end
 end
 
@@ -260,20 +266,20 @@ if ksml:find("%[KSML%]") then
 		next = ksml:find("%[")
 		
 		if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
-			local tag = ksml:sub(2,ksml:find("%]")-1)
+			local tag = ksml:sub(2, ksml:find("%]")-1)
 			local closing, arg = false
 			if tag:find("%:") then
 				arg = tag:sub(tag:find("%:")+1)
-				tag = tag:sub(1,tag:find("%:")-1)
+				tag = tag:sub(1, tag:find("%:")-1)
 			end
-			if tag:sub(1,1) == "/" then
+			if tag:sub(1, 1) == "/" then
 				closing = true
 				tag = tag:sub(2)
 			end
 			ksml = ksml:sub(ksml:find("%]")+1)
-			parse(tag,arg,closing)
+			parse(tag, arg, closing)
 		else
-			insert(ksml:sub(1,1))
+			insert(ksml:sub(1, 1))
 			ksml = ksml:sub(2)
 		end
 		
