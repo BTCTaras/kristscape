@@ -230,22 +230,26 @@ local function parse(tag, arg, closing)
 		for i=1,arg-1 do
 			ksml = krep .. ksml
 		end
-    elseif tag == "RIGHT" or tag == "SKIP" then
+	elseif tag == "RIGHT" or tag == "SKIP" then
 		go2(x+tonumber(arg or 1), y)
-    elseif tag == "SCRIPT" and not closing then
-        if ksml:upper:find("%[%/SCRIPT%]") then
-            local script = ksml:sub(1, ksml:upper():find("%[%/SCRIPT%]")-1)
-            ksml = ksml:sub(ksml:upper():find("%[%/SCRIPT%]"), #ksml)
-            if arg == "LUA" then
-                local eScript = loadstring(script)
-                setfenv(eScript, sandboxEnviroment)
-                eScript()
-            elseif arg == "INQUIRE" then
-                --Inquire language stuff here    
-            end
-        else
-            --handle error stuff hear    
-        end
+	elseif tag == "SCRIPT" and not closing then
+		local scriptend
+		if ksml:upper():find("%[%/SCRIPT%]") then
+			scriptend = ksml:upper():find("%[%/SCRIPT%]")
+		else
+			scriptend = #ksml + 1
+		end
+		local script = ksml:sub(1, scriptend-1)
+		if scriptend <= #ksml then
+			ksml = ksml:sub(scriptend, #ksml)
+		end
+		if arg == "LUA" then
+			local eScript = loadstring(script)
+			setfenv(eScript, sandboxEnviroment)
+			eScript()
+		elseif arg == "INQUIRE" then
+			--Inquire language stuff here    
+		end
 	elseif tag == "TOP" then
 		go2(x, 1)
 	elseif tag == "TITLE" and not closing then
