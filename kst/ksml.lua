@@ -8,13 +8,6 @@ local cw = 50 --container width
 local cs = 1 --container start
 local title = ""
 local nsfw = false
-local sandboxEnviroment = {} --If you want you can shorten the name later, also add whitelist of stuff that should be available
-
-local function addToSandboxEnv(name) --Someone PLEASE find a better name
-    local entry = _G[name]
-    local wmt = setmetatable({},{__index=entry, __metatable = "protected"})
-    sandboxEnviroment[name] = wmt
-end
 
 local version = args[4] or "0.5.2"
 local error = 0
@@ -244,9 +237,7 @@ local function parse(tag, arg, closing)
 			ksml = ksml:sub(scriptend, #ksml)
 		end
 		if arg == "LUA" then
-			local eScript = loadstring(script)
-			setfenv(eScript, sandboxEnviroment)
-			eScript()
+			loadfile("kst/sandbox.lua")(script)
 		elseif arg == "INQUIRE" then
 			--Inquire language stuff here    
 		end
