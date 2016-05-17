@@ -1,13 +1,14 @@
 --Signed hash of the rest of the file goes here
 local args = {...}
 local debug = false
-local ksml = args[1]:gsub("\n", "")
+local ksml = args[1]
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cw = 50 --container width
 local cs = 1 --container start
 local title = ""
 local nsfw = false
+local compat = false
 
 local version = args[4] or "0.5.2"
 local error = 0
@@ -143,7 +144,15 @@ local function insert(ch)
 		x = x + 1
 		kasm[y] = a1 .. ch .. a2 .. b1 .. fg:sub(#fg) .. b2 .. c1 .. bg:sub(#bg) .. c2
 	end
-	if x > w then go2(cs, y+1) end
+	if x > w then
+		if compat and ch == "=" then
+			--Fix extremely specific compatibility error
+			ksml = ksml:gsub("__ __    ","[CR] __ __    ")
+			--Update this when [CENTER] tags are done
+		else
+			go2(cs, y+1)
+		end
+	end
 end
 
 function go2(xx, yy)
@@ -183,9 +192,10 @@ local function parse(tag, arg, closing)
 			fg = fg:sub(1, #fg-1)
 			if fg == "" then fg = "f" end
 		end
-	elseif tag == "CLEAR" then
+	elseif tag == "CLEAR" or tag == "BG" then
 		kasm = {}
 		go2(1, 1)
+		if #arg > 0 then bg = arg end
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
@@ -260,9 +270,38 @@ local function parse(tag, arg, closing)
 end
 
 if ksml:find("%[KSML%]") then
-	ksml = ksml:sub(ksml:find("%[KSML%]")+6)
-	kasm[1] = ""
+	ksml = ksml:gsub("\n",""):sub(ksml:find("%[KSML%]")+6)
+else
+	--Try to guess if this is KSML made for KristScape 0.1.x
+	local ksmlodds = 0
+	if ksml:find("\n") then
+		local line1 = ksml:sub(1,ksml:find("\n"))
+		if not line1:find("%[") then
+			ksml = "[TITLE]"..ksml:sub(1,ksml:find("\n")-1).."[/TITLE]"..ksml:sub(ksml:find("\n")+1)
+			ksmlodds = ksmlodds + 1
+		end
+	end
+	if ksml:sub(1,ksml:find("\n") or #ksml):find("%[BG%:") then
+		ksmlodds = ksmlodds + 1
+		if ksmlodds == 1 and ksml:find("%[BG%:") > 1 then
+			ksml = "[TITLE]"..ksml:sub(1,ksml:find("%[BG%:")-1).."[/TITLE]"..ksml:sub(ksml:find("%[BG%:"))
+		end
+	end
+	if ksml:find("%[END%]") then
+		ksmlodds = ksmlodds + 1
+	end
+	ksml = ksml:gsub("\n","")
+	ksml = ksml:gsub("%[%/CENTER%]","[BR]") --remove this when [CENTER] tags are added
+	if ksmlodds >= 2 then
+		compat = true
+	else
+		error = 10
+	end
+end
 
+kasm[1] = ""
+
+if error == 0 then
 	while #ksml > 0 do
 		next = ksml:find("%[")
 		
@@ -293,8 +332,6 @@ if ksml:find("%[KSML%]") then
 			os.sleep(1)
 		end
 	end
-else
-	error = 10
 end
 
 if not debug and not args[1] then
@@ -302,5 +339,6 @@ if not debug and not args[1] then
 end
 
 go2 = nil
-status = error
+title = title:gsub("\n","")
+status = error + (compat and 2^8 or 0)
 return kasm, title, status
