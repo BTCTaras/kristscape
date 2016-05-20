@@ -1,13 +1,14 @@
 --Signed hash of the rest of the file goes here
 local args = {...}
 local debug = false
-local ksml = args[1]:gsub("\n","")
+local ksml = args[1]
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cw = 50 --container width
 local cs = 1 --container start
 local title = ""
 local nsfw = false
+local compat = false
 
 local version = args[4] or "0.5.2"
 local error = 0
@@ -121,12 +122,12 @@ for k, v in pairs (lookup.colors) do -- So we can use [C:f]
 end
 
 
-local function makemea(thing,from)
+local function makemea(thing, from)
 	if thing == "color" then
 		local colorKey = lookup.colors[from]
 		if colorKey ~= nil then return colorKey end
 
-		colorKey = lookup.colorcodes[from:lower ()]
+		colorKey = lookup.colorcodes[from:lower()]
 		if colorKey ~= nil then return colorKey end
 
 		return "f" -- Default color
@@ -143,7 +144,15 @@ local function insert(ch)
 		x = x + 1
 		kasm[y] = a1 .. ch .. a2 .. b1 .. fg:sub(#fg) .. b2 .. c1 .. bg:sub(#bg) .. c2
 	end
-	if x > w then go2(cs,y+1) end
+	if x > w then
+		if compat and ch == "=" then
+			--Fix extremely specific compatibility error
+			ksml = ksml:gsub("__ __    ","[CR] __ __    ")
+			--Update this when [CENTER] tags are done
+		else
+			go2(cs, y+1)
+		end
+	end
 end
 
 function go2(xx, yy)
@@ -178,14 +187,15 @@ local function parse(tag, arg, closing)
 	elseif tag == "C" then
 		if not closing then
 			arg = arg:upper()
-			fg = fg .. makemea("color",arg)
+			fg = fg .. makemea("color", arg)
 		else
-			fg = fg:sub(1,#fg-1)
+			fg = fg:sub(1, #fg-1)
 			if fg == "" then fg = "f" end
 		end
-	elseif tag == "CLEAR" then
+	elseif tag == "CLEAR" or tag == "BG" then
 		kasm = {}
-		go2(1,1)
+		go2(1, 1)
+		if #arg > 0 then bg = arg end
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
@@ -193,15 +203,15 @@ local function parse(tag, arg, closing)
 	elseif tag == "CR" then
 		x = 1
 	elseif tag == "DOWN" then
-		go2(x,y-tonumber(arg or 1))
+		go2(x, y-tonumber(arg or 1))
 	elseif tag == "END" then
 		ksml = ""
 	elseif tag == "HL" then
 		if not closing then
 			arg = arg:upper()
-			bg = bg .. makemea("color",arg)
+			bg = bg .. makemea("color", arg)
 		else
-			bg = bg:sub(1,#bg-1)
+			bg = bg:sub(1, #bg-1)
 			if bg == "" then bg = "0" end
 		end
 	elseif tag == "ID" then
@@ -218,53 +228,98 @@ local function parse(tag, arg, closing)
 		arg = tonumber(arg or 1)
 		local krep = ksml
 		if ksml:upper():find("%[%/REP%]") then
-			krep = ksml:sub(1,ksml:upper():find("%[%/REP%]")-1)
+			krep = ksml:sub(1, ksml:upper():find("%[%/REP%]")-1)
 		end
 		for i=1,arg-1 do
-			ksml = krep..ksml
+			ksml = krep .. ksml
 		end
 	elseif tag == "RIGHT" or tag == "SKIP" then
-		go2(x+tonumber(arg or 1),y)
+		go2(x+tonumber(arg or 1), y)
+	elseif tag == "SCRIPT" and not closing then
+		local scriptend
+		if ksml:upper():find("%[%/SCRIPT%]") then
+			scriptend = ksml:upper():find("%[%/SCRIPT%]")
+		else
+			scriptend = #ksml + 1
+		end
+		local script = ksml:sub(1, scriptend-1)
+		if scriptend <= #ksml then
+			ksml = ksml:sub(scriptend, #ksml)
+		end
+		if arg == "LUA" then
+			loadfile("kst/sandbox.lua")(script)
+		elseif arg == "INQUIRE" then
+			--Inquire language stuff here    
+		end
 	elseif tag == "TOP" then
-		go2(x,1)
+		go2(x, 1)
 	elseif tag == "TITLE" and not closing then
 		local nt = ksml
 		if ksml:upper():find("%[%/TITLE%]") then
-			nt = ksml:sub(1,ksml:upper():find("%[%/TITLE%]")-1)
-			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]"),#ksml)
+			nt = ksml:sub(1, ksml:upper():find("%[%/TITLE%]")-1)
+			ksml = ksml:sub(ksml:upper():find("%[%/TITLE%]"), #ksml)
 		else
 			ksml = ""
 		end
 		title = title .. nt
 	elseif tag == "UP" then
-		go2(x,y+tonumber(arg or 1))
+		go2(x, y+tonumber(arg or 1))
 	elseif tag == "X" then
-		go2(tonumber(arg),y)
+		go2(tonumber(arg), y)
 	end
 end
 
 if ksml:find("%[KSML%]") then
-	ksml = ksml:sub(ksml:find("%[KSML%]")+6)
-	kasm[1] = ""
+	ksml = ksml:gsub("\n",""):sub(ksml:find("%[KSML%]")+6)
+else
+	--Try to guess if this is KSML made for KristScape 0.1.x
+	local ksmlodds = 0
+	if ksml:find("\n") then
+		local line1 = ksml:sub(1,ksml:find("\n"))
+		if not line1:find("%[") then
+			ksml = "[TITLE]"..ksml:sub(1,ksml:find("\n")-1).."[/TITLE]"..ksml:sub(ksml:find("\n")+1)
+			ksmlodds = ksmlodds + 1
+		end
+	end
+	if ksml:sub(1,ksml:find("\n") or #ksml):find("%[BG%:") then
+		ksmlodds = ksmlodds + 1
+		if ksmlodds == 1 and ksml:find("%[BG%:") > 1 then
+			ksml = "[TITLE]"..ksml:sub(1,ksml:find("%[BG%:")-1).."[/TITLE]"..ksml:sub(ksml:find("%[BG%:"))
+		end
+	end
+	if ksml:find("%[END%]") then
+		ksmlodds = ksmlodds + 1
+	end
+	ksml = ksml:gsub("\n","")
+	ksml = ksml:gsub("%[%/CENTER%]","[BR]") --remove this when [CENTER] tags are added
+	if ksmlodds >= 2 then
+		compat = true
+	else
+		error = 10
+	end
+end
 
+kasm[1] = ""
+
+if error == 0 then
 	while #ksml > 0 do
 		next = ksml:find("%[")
 		
 		if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
-			local tag = ksml:sub(2,ksml:find("%]")-1)
+			local tag = ksml:sub(2, ksml:find("%]")-1)
 			local closing, arg = false
 			if tag:find("%:") then
 				arg = tag:sub(tag:find("%:")+1)
-				tag = tag:sub(1,tag:find("%:")-1)
+				tag = tag:sub(1, tag:find("%:")-1)
 			end
-			if tag:sub(1,1) == "/" then
+			if tag:sub(1, 1) == "/" then
 				closing = true
 				tag = tag:sub(2)
 			end
 			ksml = ksml:sub(ksml:find("%]")+1)
-			parse(tag,arg,closing)
+			parse(tag, arg, closing)
 		else
-			insert(ksml:sub(1,1))
+			insert(ksml:sub(1, 1))
 			ksml = ksml:sub(2)
 		end
 		
@@ -277,8 +332,6 @@ if ksml:find("%[KSML%]") then
 			os.sleep(1)
 		end
 	end
-else
-	error = 10
 end
 
 if not debug and not args[1] then
@@ -286,5 +339,6 @@ if not debug and not args[1] then
 end
 
 go2 = nil
-status = error
+title = title:gsub("\n","")
+status = error + (compat and 2^8 or 0)
 return kasm, title, status
