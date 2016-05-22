@@ -7,6 +7,8 @@ end
 
 local hardware = "Computer"
 
+local useHTTPSproxy = _HOST:find("CCEmuRedux") ~= nil
+
 do
 	if turtle then
 		hardware = "Turtle"
@@ -46,6 +48,7 @@ local server = {}
 server.dns = "http://krist.ceriat.net/?a="
 server.cert = "http://kscert.ceriat.net/"
 server.cert = "http://ceriat.net/kristnet/cert"
+server.proxy = "http://https.ceriat.net/?l="
 
 local kristScapeUserAgent = "KristScape/%s (%s; %s; #%d; en-gb)"
 
@@ -134,11 +137,21 @@ local function seturl(url, v)
 end
 
 local function fullrender(n)
-	local buffer-- = t[n].buffer
-	--print(t[n].ksml)
-	--os.sleep(2)
-	buffer = loadfile("kst/ksml.lua")(t[n].ksml,nil,nil,version)
+	local buffer, title, status = loadfile("kst/ksml.lua")(t[n].ksml,nil,nil,version)
 
+	if #title > 0 then
+		t[n].title = title
+	elseif t[n].name == "" then
+		t[n].title = "New Tab"
+	else
+		t[n].title = t[n].name..".kst"
+	end
+	
+	if status > 255 then
+		t[n].status = "Done (Compatibility mode)"
+		status = status - 256
+	end
+	
 	port.setBackgroundColor(coloxrs.white)
 	port.clear()
 
@@ -160,6 +173,8 @@ local function fullrender(n)
 		port.setCursorPos(1,i)
 		port.blit(a,b,c)
 	end
+	drawtabs()
+	setstatus(t[n].status)
 end
 
 local function log(file,text)
@@ -234,6 +249,7 @@ function tabClass:reset()
 	self.http = ""
 	self.name = ""
 	self.ksml = ""
+	self.status = ""
 	self.certified = false
 	self.buffer = {}
 	self.momentum = 100000
@@ -332,6 +348,12 @@ local function drawhud()
 	term.write(" Menu ")
 end
 
+local function ustat(tab)
+	if activetab == tab then
+		setstatus(t[tab].status)
+	end
+end
+
 drawtabs()
 drawhud()
 xy(4,4)
@@ -339,7 +361,7 @@ xy(4,4)
 local loading = false
 local running = true
 
-tab.open("http://x.kst/")
+tab.open("")
 
 while tabs > 0 do
 	local ev, p1, p2, p3, p4 = os.pullEvent()
@@ -352,17 +374,29 @@ while tabs > 0 do
 			local response = p2.readAll()
 
 			if response:sub(1,1) == "$" then
-				setstatus("Forwarding...")
+				t[targettab].status = "Forwarding..."
 				CALL(server.dns .. response:sub(2):gsub(".kst", "") .. "#at" .. tostring(targettab - 1))
 				t[targettab].url = fixurl(response:sub(2), "url")
 				t[targettab].name = response:sub(2):gsub(".kst", "")
 				seturl(fixurl(response:sub(2), "url"))
+				ustat(targettab)
 			elseif #response > 0 then
-				setstatus("Downloading page...")
-				CALL("http://" .. response)
+				local prot = "http://"
+				t[targettab].status = "Downloading page..."
+				if response:sub(1,25) == "dl.dropboxusercontent.com" then
+					if useHTTPSproxy then
+						t[targettab].status = "Downloading by proxy..."
+						s = server.proxy
+					else
+						s = "https://"
+					end
+				end
+				CALL(prot .. response)
 				t[targettab].http = fixurl(response, "url")
+				ustat(targettab)
 			else
-				setstatus("No site found")
+				t[targettab].status = "No site found"
+				ustat(targettab)
 			end
 		elseif p1:sub(1, #server.cert) == server.cert then
 			certificates = p2.readAll()
@@ -385,7 +419,8 @@ while tabs > 0 do
 					seturl(t[i].url,t[i].certified)
 
 					if activetab == i then
-						setstatus("Done")
+						t[i].status = "Done"
+						setstatus(t[i].status)
 						fullrender(i)
 					end
 
@@ -395,6 +430,22 @@ while tabs > 0 do
 		end
 		p2:close()
 	elseif ev == "http_failure" then
+		if p1 == server.cert then
+			--CALL(server.cert)
+		else
+			for i=1,10 do
+				if t[i].http == p1 then
+					if activetab == i then
+						t[i].status = "Error"
+						setstatus(t[i].status)
+						fullrender(i)
+					end
+
+					break
+				end
+			end
+		end
+		log("http", "?" .. " " .. p1)
 		-- rip ceriat 2007-2016
 	elseif ev == "mouse_click" then
 		baredit = ""
