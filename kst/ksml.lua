@@ -9,6 +9,7 @@ local cs = 1 --container start
 local title = ""
 local nsfw = false
 local compat = false
+local scripts = {["LUA"] = {},["INQUIRE"] = {}}
 
 local version = args[4] or "0.5.2"
 local error = 0
@@ -247,9 +248,9 @@ local function parse(tag, arg, closing)
 			ksml = ksml:sub(scriptend, #ksml)
 		end
 		if arg == "LUA" then
-			loadfile("kst/sandbox.lua")(script)
+			table.insert(scripts.LUA, script)
 		elseif arg == "INQUIRE" then
-			--Inquire language stuff here    
+			table.insert(scripts.INQUIRE, script)
 		end
 	elseif tag == "TOP" then
 		go2(x, 1)
@@ -341,4 +342,4 @@ end
 go2 = nil
 title = title:gsub("\n","")
 status = error + (compat and 2^8 or 0)
-return kasm, title, status
+return kasm, title, status, scripts
