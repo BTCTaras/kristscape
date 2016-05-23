@@ -247,8 +247,10 @@ local function parse(tag, arg, closing)
 		if arg == "LUA" then
 			loadfile("kst/sandbox.lua")(script)
 		elseif arg == "INQUIRE" then
-			ksml = ksml .. loadfile("kst/inquire.lua")()
+			ksml = loadfile("kst/inquire.lua")(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw) .. ksml
 		end
+	elseif tag == "SP" then
+		ksml = " " .. ksml
 	elseif tag == "TOP" then
 		go2(x, 1)
 	elseif tag == "TITLE" and not closing then
@@ -264,6 +266,8 @@ local function parse(tag, arg, closing)
 		go2(x, y+tonumber(arg or 1))
 	elseif tag == "X" then
 		go2(tonumber(arg), y)
+	elseif tag == "Y" then
+		go2(x, tonumber(arg))
 	end
 end
 
