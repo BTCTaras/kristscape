@@ -59,9 +59,7 @@ lookup["colors"] = {
 	["DKLIME"] = "d",
 	["RED"] = "e",
 	["BLACK"] = "f",
-	["LEMMMYSSOUL"] = "f",
-	["THEMEFG"] = "x",
-	["THEMEBG"] = "y"
+	["LEMMMYSSOUL"] = "f"
 }
 
 lookup["colorcodes"] = {}
@@ -195,7 +193,7 @@ local function parse(tag, arg, closing)
 	elseif tag == "CLEAR" or tag == "BG" then
 		kasm = {}
 		go2(1, 1)
-		if #arg > 0 then bg = arg end
+		if #arg > 0 then bg = lookup.colors[arg:upper()] end
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
@@ -249,7 +247,7 @@ local function parse(tag, arg, closing)
 		if arg == "LUA" then
 			loadfile("kst/sandbox.lua")(script)
 		elseif arg == "INQUIRE" then
-			--Inquire language stuff here    
+			ksml = ksml .. loadfile("kst/inquire.lua")()
 		end
 	elseif tag == "TOP" then
 		go2(x, 1)
@@ -270,6 +268,7 @@ local function parse(tag, arg, closing)
 end
 
 if ksml:find("%[KSML%]") then
+	--This is a KSML webpage
 	ksml = ksml:gsub("\n",""):sub(ksml:find("%[KSML%]")+6)
 else
 	--Try to guess if this is KSML made for KristScape 0.1.x
@@ -287,7 +286,7 @@ else
 			ksml = "[TITLE]"..ksml:sub(1,ksml:find("%[BG%:")-1).."[/TITLE]"..ksml:sub(ksml:find("%[BG%:"))
 		end
 	end
-	if ksml:find("%[END%]") then
+	if ksml:find("%[END%]") or ksml:find("%[%/CENTER%]") then
 		ksmlodds = ksmlodds + 1
 	end
 	ksml = ksml:gsub("\n","")
@@ -332,10 +331,6 @@ if error == 0 then
 			os.sleep(1)
 		end
 	end
-end
-
-if not debug and not args[1] then
-	--for i=1,#kasm do print(kasm[i]) end
 end
 
 go2 = nil
