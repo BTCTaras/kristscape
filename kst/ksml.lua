@@ -11,6 +11,8 @@ local nsfw = false
 local compat = false
 
 local version = args[4] or "0.5.2"
+local _SAND_ = args[5] or function() end
+local _INQU_ = args[6] or function() end
 local error = 0
 local status = 0
 
@@ -162,7 +164,6 @@ function go2(xx, yy)
 		x = #kasm[y]/3 + 1
 		while #kasm[y]/3 < xx-1 do
 			insert("\009")
-			os.sleep()
 		end
 	elseif x > 1 then
 		x = xx
@@ -245,9 +246,9 @@ local function parse(tag, arg, closing)
 			ksml = ksml:sub(scriptend, #ksml)
 		end
 		if arg == "LUA" then
-			loadfile("kst/sandbox.lua")(script)
+			_SAND_(script)
 		elseif arg == "INQUIRE" then
-			ksml = loadfile("kst/inquire.lua")(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw) .. ksml
+			ksml = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw) .. ksml
 		end
 	elseif tag == "SP" then
 		ksml = " " .. ksml

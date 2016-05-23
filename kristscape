@@ -1,6 +1,10 @@
 local version = "0.5.2"
 local code_is_a_mess = "not necessarily"
 
+local _KSML_ = loadfile("kst/ksml.lua")
+local _SAND_ = loadfile("kst/sandbox.lua")
+local _INQU_ = loadfile("kst/inquire.lua")
+
 local function CALL(server)
 	http.request(server, nil, headers)
 end
@@ -137,7 +141,7 @@ local function seturl(url, v)
 end
 
 local function fullrender(n)
-	local buffer, title, status = loadfile("kst/ksml.lua")(t[n].ksml,nil,nil,version)
+	local buffer, title, status = _KSML_(t[n].ksml,nil,nil,version,_SAND_,_INQU_)
 
 	if #title > 0 then
 		t[n].title = title
