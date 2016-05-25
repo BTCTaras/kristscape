@@ -9,6 +9,7 @@ local cs = 1 --container start
 local title = ""
 local nsfw = false
 local compat = false
+local VAR = {}
 
 local version = args[4] or "0.5.2"
 local _SAND_ = args[5] or function() end
@@ -20,6 +21,7 @@ local lines = 0
 local x, y = 1, 1
 
 local fg, bg = "f", "0"
+local clearto = "0"
 
 local lookup = {}
 
@@ -191,10 +193,15 @@ local function parse(tag, arg, closing)
 			fg = fg:sub(1, #fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "CENTER" and not closing then
+		
 	elseif tag == "CLEAR" or tag == "BG" then
 		kasm = {}
 		go2(1, 1)
-		if #arg > 0 then bg = lookup.colors[arg:upper()] end
+		if #arg > 0 then
+			clearto = lookup.colors[arg:upper()]
+			bg = clearto
+		end
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
@@ -211,7 +218,7 @@ local function parse(tag, arg, closing)
 			bg = bg .. makemea("color", arg)
 		else
 			bg = bg:sub(1, #bg-1)
-			if bg == "" then bg = "0" end
+			if bg == "" then bg = clearto end
 		end
 	elseif tag == "ID" then
 		ksml = os.getComputerID() .. ksml
@@ -224,7 +231,8 @@ local function parse(tag, arg, closing)
 	elseif tag == "NSFW" then
 		nsfw = true
 	elseif tag == "REP" and arg and not closing then
-		arg = tonumber(arg or 1)
+		if #arg == 0 then arg = "1" end
+		arg = tonumber(arg:gsub("%-","") or 1)
 		local krep = ksml
 		if ksml:upper():find("%[%/REP%]") then
 			krep = ksml:sub(1, ksml:upper():find("%[%/REP%]")-1)
@@ -248,7 +256,9 @@ local function parse(tag, arg, closing)
 		if arg == "LUA" then
 			_SAND_(script)
 		elseif arg == "INQUIRE" then
-			ksml = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw) .. ksml
+			local nk
+			nk, VAR = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw,VAR)
+			ksml = nk .. ksml
 		end
 	elseif tag == "SP" then
 		ksml = " " .. ksml
@@ -264,7 +274,7 @@ local function parse(tag, arg, closing)
 		end
 		title = title .. nt
 	elseif tag == "UP" then
-		go2(x, y+tonumber(arg or 1))
+		go2(x, y-tonumber(arg or 1))
 	elseif tag == "X" then
 		go2(tonumber(arg), y)
 	elseif tag == "Y" then
@@ -274,7 +284,7 @@ end
 
 if ksml:find("%[KSML%]") then
 	--This is a KSML webpage
-	ksml = ksml:gsub("\n",""):sub(ksml:find("%[KSML%]")+6)
+	ksml = ksml:gsub("\n",""):sub(ksml:gsub("\n",""):find("%[KSML%]")+6)
 else
 	--Try to guess if this is KSML made for KristScape 0.1.x
 	local ksmlodds = 0
@@ -298,6 +308,7 @@ else
 	ksml = ksml:gsub("%[%/CENTER%]","[BR]") --remove this when [CENTER] tags are added
 	if ksmlodds >= 2 then
 		compat = true
+		if ksml:find("%[NSFW%]") then nsfw = true end --in old sites, [NSFW] could be placed after [END] and still work
 	else
 		error = 10
 	end
@@ -341,4 +352,4 @@ end
 go2 = nil
 title = title:gsub("\n","")
 status = error + (compat and 2^8 or 0)
-return kasm, title, status
+return kasm, title, status, clearto
