@@ -150,12 +150,12 @@ local function fullrender(n)
 	else
 		t[n].title = t[n].name..".kst"
 	end
-	
+
 	if status > 255 then
 		t[n].status = "Done (Compatibility mode)"
 		status = status - 256
 	end
-	
+
 	port.setBackgroundColor(2^tonumber(back,16))
 	port.clear()
 
@@ -299,10 +299,6 @@ end
 
 function tab.close(n)
 	local oldT = t[n]
-	for i=n+1,tabs do
-		t[i - 1] = t[i]
-	end
-	t[tabs] = n
 
 	tabs = tabs - 1
 
@@ -390,9 +386,9 @@ while tabs > 0 do
 				if response:sub(1,25) == "dl.dropboxusercontent.com" then
 					if useHTTPSproxy then
 						t[targettab].status = "Downloading by proxy..."
-						s = server.proxy
+						prot = server.proxy
 					else
-						s = "https://"
+						prot = "https://"
 					end
 				end
 				CALL(prot .. response)
