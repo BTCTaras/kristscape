@@ -12,7 +12,8 @@ local compat = false
 local VAR = {}
 
 local version = args[4] or "0.5.2"
-local _SAND_ = args[5] or function() end
+local _SAND_ = args[5] or function() end --What exactly is that line for
+local box = dofile("kst/sandbox.lua")
 local _INQU_ = args[6] or function() end
 local error = 0
 local status = 0
@@ -254,6 +255,8 @@ local function parse(tag, arg, closing)
 			ksml = ksml:sub(scriptend, #ksml)
 		end
 		if arg == "LUA" then
+			local nk = box(script)
+			ksml = nk..ksml
 		elseif arg == "INQUIRE" then
 			local nk
 			nk, VAR = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw,VAR)
