@@ -17,7 +17,7 @@ function run(script)
   local f = loadstring(script)
   setfenv(f,sandboxEnviroment)
   f()
-  return sandboxEnviroment[nksml]
+  return "Hello World I am bored."
 end
 
 return run

@@ -142,6 +142,7 @@ end
 
 local function fullrender(n)
 	local buffer, title, status, back = _KSML_(t[n].ksml,nil,nil,version,_SAND_,_INQU_)
+
 	if #title > 0 then
 		t[n].title = title
 	elseif t[n].name == "" then
@@ -177,13 +178,6 @@ local function fullrender(n)
 		port.blit(a,b,c)
 	end
 	drawtabs()
-	--after rendering execute scripts
-	for _,script in pairs(scripts.LUA) do
-		loadfile("kst/sandbox.lua")(script)
-	end
-	for _,script in pairs(scripts.INQUIRE) do
-        --Work with inquire here
-	end
 	setstatus(t[n].status)
 end
 
