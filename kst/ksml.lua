@@ -9,9 +9,11 @@ local cs = 1 --container start
 local title = ""
 local nsfw = false
 local compat = false
-local scripts = {["LUA"] = {},["INQUIRE"] = {}}
+local VAR = {}
 
 local version = args[4] or "0.5.2"
+local _SAND_ = args[5] or function() end
+local _INQU_ = args[6] or function() end
 local error = 0
 local status = 0
 
@@ -19,6 +21,7 @@ local lines = 0
 local x, y = 1, 1
 
 local fg, bg = "f", "0"
+local clearto = "0"
 
 local lookup = {}
 
@@ -60,9 +63,7 @@ lookup["colors"] = {
 	["DKLIME"] = "d",
 	["RED"] = "e",
 	["BLACK"] = "f",
-	["LEMMMYSSOUL"] = "f",
-	["THEMEFG"] = "x",
-	["THEMEBG"] = "y"
+	["LEMMMYSSOUL"] = "f"
 }
 
 lookup["colorcodes"] = {}
@@ -165,7 +166,6 @@ function go2(xx, yy)
 		x = #kasm[y]/3 + 1
 		while #kasm[y]/3 < xx-1 do
 			insert("\009")
-			os.sleep()
 		end
 	elseif x > 1 then
 		x = xx
@@ -193,10 +193,15 @@ local function parse(tag, arg, closing)
 			fg = fg:sub(1, #fg-1)
 			if fg == "" then fg = "f" end
 		end
+	elseif tag == "CENTER" and not closing then
+
 	elseif tag == "CLEAR" or tag == "BG" then
 		kasm = {}
 		go2(1, 1)
-		if #arg > 0 then bg = arg end
+		if #arg > 0 then
+			clearto = lookup.colors[arg:upper()]
+			bg = clearto
+		end
 	elseif tag == "CLEARTITLE" then
 		title = ""
 	elseif tag == "CHAR" then
@@ -213,7 +218,7 @@ local function parse(tag, arg, closing)
 			bg = bg .. makemea("color", arg)
 		else
 			bg = bg:sub(1, #bg-1)
-			if bg == "" then bg = "0" end
+			if bg == "" then bg = clearto end
 		end
 	elseif tag == "ID" then
 		ksml = os.getComputerID() .. ksml
@@ -226,7 +231,8 @@ local function parse(tag, arg, closing)
 	elseif tag == "NSFW" then
 		nsfw = true
 	elseif tag == "REP" and arg and not closing then
-		arg = tonumber(arg or 1)
+		if #arg == 0 then arg = "1" end
+		arg = tonumber(arg:gsub("%-","") or 1)
 		local krep = ksml
 		if ksml:upper():find("%[%/REP%]") then
 			krep = ksml:sub(1, ksml:upper():find("%[%/REP%]")-1)
@@ -248,10 +254,13 @@ local function parse(tag, arg, closing)
 			ksml = ksml:sub(scriptend, #ksml)
 		end
 		if arg == "LUA" then
-			table.insert(scripts.LUA, script)
 		elseif arg == "INQUIRE" then
-			table.insert(scripts.INQUIRE, script)
+			local nk
+			nk, VAR = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw,VAR)
+			ksml = nk .. ksml
 		end
+	elseif tag == "SP" then
+		ksml = " " .. ksml
 	elseif tag == "TOP" then
 		go2(x, 1)
 	elseif tag == "TITLE" and not closing then
@@ -264,14 +273,17 @@ local function parse(tag, arg, closing)
 		end
 		title = title .. nt
 	elseif tag == "UP" then
-		go2(x, y+tonumber(arg or 1))
+		go2(x, y-tonumber(arg or 1))
 	elseif tag == "X" then
 		go2(tonumber(arg), y)
+	elseif tag == "Y" then
+		go2(x, tonumber(arg))
 	end
 end
 
 if ksml:find("%[KSML%]") then
-	ksml = ksml:gsub("\n",""):sub(ksml:find("%[KSML%]")+6)
+	--This is a KSML webpage
+	ksml = ksml:gsub("\n",""):sub(ksml:gsub("\n",""):find("%[KSML%]")+6)
 else
 	--Try to guess if this is KSML made for KristScape 0.1.x
 	local ksmlodds = 0
@@ -288,13 +300,14 @@ else
 			ksml = "[TITLE]"..ksml:sub(1,ksml:find("%[BG%:")-1).."[/TITLE]"..ksml:sub(ksml:find("%[BG%:"))
 		end
 	end
-	if ksml:find("%[END%]") then
+	if ksml:find("%[END%]") or ksml:find("%[%/CENTER%]") then
 		ksmlodds = ksmlodds + 1
 	end
 	ksml = ksml:gsub("\n","")
 	ksml = ksml:gsub("%[%/CENTER%]","[BR]") --remove this when [CENTER] tags are added
 	if ksmlodds >= 2 then
 		compat = true
+		if ksml:find("%[NSFW%]") then nsfw = true end --in old sites, [NSFW] could be placed after [END] and still work
 	else
 		error = 10
 	end
@@ -305,7 +318,7 @@ kasm[1] = ""
 if error == 0 then
 	while #ksml > 0 do
 		next = ksml:find("%[")
-		
+
 		if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
 			local tag = ksml:sub(2, ksml:find("%]")-1)
 			local closing, arg = false
@@ -323,7 +336,7 @@ if error == 0 then
 			insert(ksml:sub(1, 1))
 			ksml = ksml:sub(2)
 		end
-		
+
 		if debug then
 			term.setTextColor(colors.lightGray)
 			term.write(ksml)
@@ -335,11 +348,7 @@ if error == 0 then
 	end
 end
 
-if not debug and not args[1] then
-	--for i=1,#kasm do print(kasm[i]) end
-end
-
 go2 = nil
 title = title:gsub("\n","")
 status = error + (compat and 2^8 or 0)
-return kasm, title, status, scripts
+return kasm, title, status, cleartos

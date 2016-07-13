@@ -1,6 +1,10 @@
 local version = "0.5.2"
 local code_is_a_mess = "not necessarily"
 
+local _KSML_ = loadfile("kst/ksml.lua")
+local _SAND_ = loadfile("kst/sandbox.lua")
+local _INQU_ = loadfile("kst/inquire.lua")
+
 local function CALL(server)
 	http.request(server, nil, headers)
 end
@@ -54,7 +58,7 @@ local kristScapeUserAgent = "KristScape/%s (%s; %s; #%d; en-gb)"
 
 local headers = {
 	["User-Agent"] = kristScapeUserAgent:format(version, hardware, os.version(), os.getComputerID());
-	["X-Magic"] = "plugh";
+	--["X-Magic"] = "plugh";
 }
 
 CALL(server.cert)
@@ -137,8 +141,7 @@ local function seturl(url, v)
 end
 
 local function fullrender(n)
-	local buffer, title, status, scripts = loadfile("kst/ksml.lua")(t[n].ksml,nil,nil,version)
-
+	local buffer, title, status, back = _KSML_(t[n].ksml,nil,nil,version,_SAND_,_INQU_)
 	if #title > 0 then
 		t[n].title = title
 	elseif t[n].name == "" then
@@ -146,13 +149,13 @@ local function fullrender(n)
 	else
 		t[n].title = t[n].name..".kst"
 	end
-	
+
 	if status > 255 then
 		t[n].status = "Done (Compatibility mode)"
 		status = status - 256
 	end
-	
-	port.setBackgroundColor(coloxrs.white)
+
+	port.setBackgroundColor(2^tonumber(back,16))
 	port.clear()
 
 	for i=1,#buffer do
@@ -302,10 +305,6 @@ end
 
 function tab.close(n)
 	local oldT = t[n]
-	for i=n+1,tabs do
-		t[i - 1] = t[i]
-	end
-	t[tabs] = n
 
 	tabs = tabs - 1
 
@@ -393,9 +392,9 @@ while tabs > 0 do
 				if response:sub(1,25) == "dl.dropboxusercontent.com" then
 					if useHTTPSproxy then
 						t[targettab].status = "Downloading by proxy..."
-						s = server.proxy
+						prot = server.proxy
 					else
-						s = "https://"
+						prot = "https://"
 					end
 				end
 				CALL(prot .. response)
