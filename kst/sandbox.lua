@@ -6,18 +6,16 @@ function addToSandboxEnv(name) --Someone PLEASE find a better name
     sandboxEnviroment[name] = wmt
 end
 
-_G.nksml = ""
-addToSandboxEnv(nksml)
-
-local function append(ksml)
-  nksml = nksml..ksml
-end
+_G.api = {nksml="", append=function(ksml)
+api.nksml = api.nksml..ksml
+end}
+addToSandboxEnv("api")
 
 function run(script)
   local f = loadstring(script)
   setfenv(f,sandboxEnviroment)
   f()
-  return "Hello World I am bored."
+  return sandboxEnviroment["api"].nksml
 end
 
 return run

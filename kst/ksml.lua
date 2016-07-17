@@ -255,7 +255,7 @@ local function parse(tag, arg, closing)
 			ksml = ksml:sub(scriptend, #ksml)
 		end
 		if arg == "LUA" then
-			nk = dofile("kst/sandbox.lua")(script)
+			nk = _SAND_(script)
 			ksml = nk .. ksml
 		elseif arg == "INQUIRE" then
 			local nk
