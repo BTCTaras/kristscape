@@ -6,6 +6,12 @@ function addToSandboxEnv(name) --Someone PLEASE find a better name
     sandboxEnviroment[name] = wmt
 end
 
+local whitelist = {"http","math","keys","bit","coroutine","colours","colors","string","bit32","table","parallel","vector"}
+
+for i,v in pairs(whitelist) do
+	addToSandboxEnv(v)
+end
+
 local function allow(api)
   _,y = term.getSize()
   term.setCursorPos(1,y-1)
