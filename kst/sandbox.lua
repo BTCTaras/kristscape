@@ -15,7 +15,7 @@ function run(script)
   local f = loadstring(script)
   setfenv(f,sandboxEnviroment)
   f()
-  return sandboxEnviroment["api"].nksml
+  return sandboxEnviroment.api.nksml
 end
 
 return run
