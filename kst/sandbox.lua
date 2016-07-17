@@ -6,20 +6,42 @@ function addToSandboxEnv(name) --Someone PLEASE find a better name
     sandboxEnviroment[name] = wmt
 end
 
+local function allow(api)
+  _,y = term.getSize()
+  term.setCursorPos(1,y-1)
+  term.setBackgroundColor(colors.red)
+  term.setTextColor(colors.black)
+  term.clearLine()
+  term.write("Allow access to "..api.." api? [Y/N]")
+  _,key = os.pullEvent("char")
+  if key:lower() == "y" then
+  	addToSandboxEnv(api)
+  	return true
+  else
+  	return false
+  end
+end
+
 _G.api = {nksml="", append=function(ksml)
-api.nksml = api.nksml..ksml
+  api.nksml = api.nksml..tostring(ksml)
+end,
+request = function(api)
+  return allow(api)
 end}
 addToSandboxEnv("api")
 
 function run(script)
-  local f = loadstring(script)
+  local f, err = loadstring(script)
+  if err ~= nil then
+  	return "[BR][C:RED]"..err
+  end
   setfenv(f,sandboxEnviroment)
   local ok, err = pcall(f)
-  if not ok then
-  	status("Script error: "..err)
-  	return ""
+  if ok then
+ 	return sandboxEnviroment.api.nksml
+  else
+   	return "[BR][C:RED]"..err
   end
-  return sandboxEnviroment.api.nksml
 end
 
 return run
