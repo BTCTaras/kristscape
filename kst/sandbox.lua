@@ -14,7 +14,11 @@ addToSandboxEnv("api")
 function run(script)
   local f = loadstring(script)
   setfenv(f,sandboxEnviroment)
-  f()
+  local ok, err = pcall(f)
+  if not ok then
+  	status("Script error: "..err)
+  	return ""
+  end
   return sandboxEnviroment.api.nksml
 end
 
