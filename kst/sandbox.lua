@@ -37,6 +37,7 @@ end}
 addToSandboxEnv("api")
 
 function run(script)
+  sandboxEnviroment.api.nksml = ""
   local f, err = loadstring(script)
   if err ~= nil then
   	return "[BR][C:RED]"..err
