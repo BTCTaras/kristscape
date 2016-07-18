@@ -13,6 +13,7 @@ local VAR = {}
 
 local version = args[4] or "0.5.2"
 local _SAND_ = args[5] or function() end
+_SAND_ = dofile("kst/sandbox.lua")
 local _INQU_ = args[6] or function() end
 local error = 0
 local status = 0
@@ -194,7 +195,7 @@ local function parse(tag, arg, closing)
 			if fg == "" then fg = "f" end
 		end
 	elseif tag == "CENTER" and not closing then
-		
+
 	elseif tag == "CLEAR" or tag == "BG" then
 		kasm = {}
 		go2(1, 1)
@@ -254,7 +255,8 @@ local function parse(tag, arg, closing)
 			ksml = ksml:sub(scriptend, #ksml)
 		end
 		if arg == "LUA" then
-			_SAND_(script)
+			nk = _SAND_(script)
+			ksml = nk .. ksml
 		elseif arg == "INQUIRE" then
 			local nk
 			nk, VAR = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw,VAR)
@@ -319,7 +321,7 @@ kasm[1] = ""
 if error == 0 then
 	while #ksml > 0 do
 		next = ksml:find("%[")
-		
+
 		if next == 1 and ksml:sub(2,2) ~= "[" and ksml:sub(2,2) ~= "]" and ksml:find("%]") then
 			local tag = ksml:sub(2, ksml:find("%]")-1)
 			local closing, arg = false
@@ -337,7 +339,7 @@ if error == 0 then
 			insert(ksml:sub(1, 1))
 			ksml = ksml:sub(2)
 		end
-		
+
 		if debug then
 			term.setTextColor(colors.lightGray)
 			term.write(ksml)
