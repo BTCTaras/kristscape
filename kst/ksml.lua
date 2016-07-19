@@ -113,12 +113,12 @@ lookup["characters"] = {
 	["DOWN ARROW"] = "\025",
 }
 
-for i = 1, 255 do -- What' ya gonna do bout unicode?
-	local s = tostring (i)
-	-- Pad s from the left to 3 chars (load is supplied by bios.lua and loadstring is removed in lua 5.2)
-	local v = load ("return '\\" .. string.rep ("0", 3 - #s) .. s .. "'")()
-	lookup.characters [s] = v
-end
+setmetatable(lookup.characters, {__index = function(t, k)
+	local k = tonumber(k)
+	if k and k >= 0 and k <= 255 then
+		return string.char(k)
+	end
+end})
 
 for k, v in pairs (lookup.colors) do -- So we can use [C:f]
 	lookup.colorcodes [tostring (v)] = tostring (k)
