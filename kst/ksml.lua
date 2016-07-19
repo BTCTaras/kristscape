@@ -115,9 +115,8 @@ lookup["characters"] = {
 
 for i = 1, 255 do -- What' ya gonna do bout unicode?
 	local s = tostring (i)
-	-- Pad s from the left to 3 chars (load is supplied by bios.lua and loadstring is removed in lua 5.2)
-	local v = load ("return '\\" .. string.rep ("0", 3 - #s) .. s .. "'")()
-	lookup.characters [s] = v
+	lookup.characters[i] = string.char(i)
+	lookup.characters[tostring(i)] = string.char(i)
 end
 
 for k, v in pairs (lookup.colors) do -- So we can use [C:f]
