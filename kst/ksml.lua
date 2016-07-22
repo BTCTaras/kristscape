@@ -1,10 +1,9 @@
---Signed hash of the rest of the file goes here
 local args = {...}
 local debug = false
 local ksml = args[1]
 local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
-local cw = 50 --container width
+local cw = w --container width
 local cs = 1 --container start
 local title = ""
 local nsfw = false
@@ -277,6 +276,9 @@ local function parse(tag, arg, closing)
 		title = title .. nt
 	elseif tag == "UP" then
 		go2(x, y-tonumber(arg or 1))
+	elseif tag == "W" then
+		cs = x
+		cw = tonumber(arg)
 	elseif tag == "X" then
 		go2(tonumber(arg), y)
 	elseif tag == "Y" then
