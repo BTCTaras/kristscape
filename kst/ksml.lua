@@ -5,6 +5,7 @@ local kasm = args[2] or {}
 local w = args[3] or 50 --screen width
 local cw = w --container width
 local cs = 1 --container start
+local rf = 0 --if there is a redirect, wait this long before continuing
 local title = ""
 local nsfw = false
 local compat = false
@@ -176,7 +177,12 @@ function go2(xx, yy)
 end
 
 local function parse(tag, arg, closing)
+	if tag == "CLOSE" then
+		tag = arg
+		closing = true
+	end
 	if tag == "A" then
+		
 	elseif tag == "BLOCK" then
 		if arg:upper() == "SERVER" then error = 63 end
 		if arg == "" or arg == "*" then error = 64 end
@@ -230,6 +236,8 @@ local function parse(tag, arg, closing)
 		go2(x, y+1)
 	elseif tag == "NSFW" then
 		nsfw = true
+	elseif tag == "REFRESH" then
+		rf = tonumber(arg) or 0
 	elseif tag == "REP" and arg and not closing then
 		if #arg == 0 then arg = "1" end
 		arg = tonumber(arg:gsub("%-","") or 1)
@@ -261,6 +269,8 @@ local function parse(tag, arg, closing)
 			nk, VAR = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw,VAR)
 			ksml = nk .. ksml
 		end
+	elseif tag == "SFW" then
+		nsfw = false
 	elseif tag == "SP" then
 		ksml = " " .. ksml
 	elseif tag == "TOP" then
