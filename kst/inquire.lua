@@ -18,7 +18,7 @@ const.certified = args[13]
 const.id = os.getComputerID()
 const.cc = os.version()
 const.ks = args[14]
-const.host = _HOST
+const.host = _HOST:gsub(" ","[SP]")
 const.from = args[15]
 --const.true = true
 --const.false = false
@@ -42,7 +42,11 @@ local function material(word)
 	
 	if identifier == "#" then
 		--Constant
-		return tostring(const[word:sub(2):lower()])
+		word = word:sub(2):lower():gsub("%)","")
+		if word:sub(1,7) == "random(" then
+			return tostring(math.random(word:sub(8)))
+		end
+		return tostring(const[word])
 	end
 	
 	if identifier == "$" then
@@ -112,6 +116,17 @@ while script:find("%;") do
 		end
 		if vword:sub(1,1) == "$" then
 			var[vword:sub(2)] = vval
+		end
+	end
+	
+	if command == "ifequal" then
+		if material(words[1]:lower()) == material(words[2]:lower()) then
+			local result = ""
+			for i=3,#words do
+				if words[i] == "then" then words[i] = ";" end
+				result = result .. " " .. words[i]
+			end
+			script = result .. ";" .. script
 		end
 	end
 end
