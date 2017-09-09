@@ -26,6 +26,7 @@ const.pocket = pocket
 const.command = command
 const.lastlink = args[16]
 const.nsfw = args[17]
+const.title = args[19]
 
 local var = args[18]
 

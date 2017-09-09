@@ -266,7 +266,7 @@ local function parse(tag, arg, closing)
 			ksml = nk .. ksml
 		elseif arg == "INQUIRE" then
 			local nk
-			nk, VAR = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw,VAR)
+			nk, VAR = _INQU_(script,nil,nil,cw,cs,nil,nil,x,y,nil,nil,nil,nil,version,nil,nil,nsfw,VAR,title)
 			ksml = nk .. ksml
 		end
 	elseif tag == "SFW" then
