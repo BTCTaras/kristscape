@@ -383,7 +383,7 @@ while tabs > 0 do
 			elseif #response > 0 then
 				local prot = "http://"
 				t[targettab].status = "Downloading page..."
-				if response:sub(1,25) == "dl.dropboxusercontent.com" then
+				if response:sub(1,25) == "dl.dropboxusercontent.com" or response:sub(1,25) == "raw.githubusercontent.com" then
 					if useHTTPSproxy then
 						t[targettab].status = "Downloading by proxy..."
 						prot = server.proxy
@@ -408,6 +408,7 @@ while tabs > 0 do
 				end
 			end
 		else
+			if p1:sub(1,#server.proxy) == server.proxy then p1 = "http://"..p1:sub(1+#server.proxy) end
 			for i=1,10 do
 				if t[i].http == p1 then
 					t[i].ksml = p2.readAll()
